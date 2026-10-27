@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dragon Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1a1c;--card:#16282b;--line:#264247;--text:#eef4f2;--muted:#93aba7;--gold:#f2b84b;--gold2:#ffd77a;--red:#e05a47;--green:#3fae78;--parch:#f3e6c4;--parch2:#e6d09c;--ink:#3b2a14;--radius:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100%}
+body{background:radial-gradient(900px 500px at 50% -10%,#1f3a3c 0%,var(--bg) 65%) fixed}
+#app{max-width:720px;margin:0 auto;padding:14px 16px 40px}
+.title{font-family:Cinzel,serif;font-weight:900;letter-spacing:.5px}
+.no-select{user-select:none;-webkit-user-select:none}
+h1,h2,h3{margin:.2em 0 .45em}
+a{color:var(--gold)}
+.btn{appearance:none;border:0;border-radius:12px;padding:14px 18px;font:700 16px Inter,sans-serif;cursor:pointer;background:var(--gold);color:#2a1b02;transition:transform .08s}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:transparent;color:var(--text);border:1.5px solid #35585d}
+.btn.red{background:var(--red);color:#fff}.btn.green{background:var(--green);color:#fff}
+.btn.block{display:block;width:100%}.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:8px 14px;font-size:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>.btn{flex:1}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;border:1px solid var(--line)}
+.parch{background:var(--parch);color:var(--ink);border-radius:10px;padding:18px 16px;box-shadow:0 8px 24px rgba(0,0,0,.35);position:relative}
+.muted{color:var(--muted)}.small{font-size:13px}.center{text-align:center}
+.logo{font-family:Cinzel,serif;font-weight:900;font-size:38px;color:var(--gold);text-align:center;margin:22px 0 2px;text-shadow:0 3px 0 #6b3d00}
+.sub{text-align:center;color:var(--muted);margin-bottom:20px}
+.hero{font-size:64px;text-align:center;line-height:1}
+label{display:block;font-weight:600;margin:14px 0 6px;font-size:14px;color:var(--muted)}
+select,input{width:100%;padding:13px 12px;border-radius:10px;border:1.5px solid #2f5156;background:#0d1719;color:var(--text);font:16px Inter,sans-serif}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.pill{background:#0d1719;border:1px solid #2c4a4f;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;white-space:nowrap}
+.pill.gold{color:var(--gold)}.pill.red{color:#ff8f80;border-color:#6a2c25}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
+.stats b{display:block;font-size:22px;color:var(--gold)}
+/* ---------- map ---------- */
+.map{background:var(--parch);border-radius:16px;padding:18px 14px;margin:16px 0;box-shadow:inset 0 0 60px rgba(120,80,20,.35),0 8px 24px rgba(0,0,0,.35);color:var(--ink);position:relative}
+.map h3{font-family:Cinzel,serif;text-align:center;margin:0 0 6px}
+.node{display:flex;align-items:center;gap:12px;width:86%;background:#fff8e6;border:2px solid var(--parch2);border-radius:14px;padding:10px 12px;cursor:pointer;position:relative;text-align:left;font-family:Inter,sans-serif;color:var(--ink);margin-bottom:26px}
+.node:nth-of-type(even){margin-left:14%}
+.node::after{content:"";position:absolute;bottom:-26px;height:26px;border-left:3px dashed #b0884a}
+.node:nth-of-type(odd)::after{left:70%}.node:nth-of-type(even)::after{left:30%}
+.node:last-of-type{margin-bottom:0}.node:last-of-type::after{display:none}
+.node .ic{font-size:34px;width:46px;text-align:center;flex:none}
+.node b{font-family:Cinzel,serif;font-size:15px;display:block}
+.node .tp{font-size:12px;color:#7a6440}
+.node .st{color:#c08a14;letter-spacing:2px;font-size:15px}
+.node.locked{filter:grayscale(1);opacity:.55;cursor:not-allowed}
+.node.cur{border-color:var(--gold);box-shadow:0 0 0 3px #f2b84b66}
+.node .badge{position:absolute;right:8px;top:-10px;background:var(--green);color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px}
+/* ---------- scene ---------- */
+.scene{position:relative;height:190px;border-radius:16px;overflow:hidden;margin-bottom:12px;border:1px solid #00000055;background:linear-gradient(var(--s1),var(--s2))}
+.scene .deco{position:absolute;left:0;bottom:46px;white-space:nowrap;font-size:34px;transition:transform .9s ease-out;opacity:.9}
+.scene .deco.far{bottom:70px;font-size:22px;opacity:.55}
+.scene .ground{position:absolute;left:0;right:0;bottom:0;height:50px;background:var(--gr);border-top:3px solid #00000033}
+.scene .ground::before{content:"";position:absolute;left:0;right:0;top:20px;border-top:3px dashed #ffffff55}
+.actor{position:absolute;bottom:34px;transition:left .6s ease-out;line-height:1}
+.runner{font-size:42px;left:60%}
+.runner span,.dragon span{display:inline-block;transform:scaleX(-1)}
+.runner span{animation:bob .45s infinite alternate}
+.dragon{font-size:66px;bottom:38px}
+.dragon span{animation:flap .6s infinite alternate}
+.fire{position:absolute;font-size:30px;bottom:56px;opacity:0;transition:opacity .2s, left .6s}
+.scene.breath .fire{opacity:1;animation:flick .2s infinite alternate}
+.treasure{font-size:40px;bottom:36px;transition:left .8s ease-out}
+.scene .tag{position:absolute;top:8px;background:#000a;color:#fff;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:700}
+.scene .tag.l{left:8px}.scene .tag.r{right:8px}
+.scene.danger{animation:danger .8s infinite}
+.scene.hit .runner span{animation:hit .4s}
+@keyframes bob{to{transform:scaleX(-1) translateY(-6px)}}
+@keyframes flap{to{transform:scaleX(-1) translateY(-8px) scale(1.05)}}
+@keyframes flick{to{transform:scale(1.25)}}
+@keyframes hit{50%{transform:scaleX(-1) rotate(20deg)}}
+@keyframes danger{50%{box-shadow:inset 0 0 50px #ff2a00}}
+.gap{height:10px;border-radius:5px;background:#2a3b3e;overflow:hidden;margin:2px 0 12px}
+.gap i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--gold),var(--green));transition:width .25s}
+.hud{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.progress{display:flex;gap:4px;margin-bottom:12px}
+.progress span{flex:1;height:6px;border-radius:3px;background:#2a3b3e}
+.progress span.ok{background:var(--green)}.progress span.bad{background:var(--red)}.progress span.cur{background:var(--gold)}
+/* ---------- full-screen run ---------- */
+body.running{overflow:hidden}
+.stage{position:fixed;inset:0;overflow:hidden;z-index:5;touch-action:manipulation}
+.world{position:absolute;left:0;top:0;will-change:transform}
+.world svg{position:absolute;inset:0;width:100%;height:100%}
+.tok{position:absolute;left:0;top:0;will-change:transform;pointer-events:none;z-index:2}
+.tok .in{position:absolute;left:0;top:0;line-height:1;transform:translate(-50%,-85%) scaleX(var(--fx,1))}
+.runner{z-index:3}
+.runner .in{font-size:42px;animation:bob2 .3s infinite alternate}
+.dragon .in{font-size:72px;animation:flap2 .45s infinite alternate;filter:drop-shadow(0 8px 5px rgba(0,0,0,.35))}
+@keyframes bob2{to{transform:translate(-50%,-100%) scaleX(var(--fx,1))}}
+@keyframes flap2{to{transform:translate(-50%,-95%) scaleX(var(--fx,1)) scale(1.07)}}
+.runner.shake .in{animation:shake .1s 5 linear}
+@keyframes shake{0%{transform:translate(-58%,-85%) scaleX(var(--fx,1))}50%{transform:translate(-42%,-90%) scaleX(var(--fx,1))}100%{transform:translate(-50%,-85%) scaleX(var(--fx,1))}}
+.bubble{position:absolute;left:10px;top:-96px;font-size:28px;line-height:1;opacity:0;background:#fff;border-radius:50%;padding:5px;box-shadow:0 3px 8px #0006}
+.bubble.pop{animation:pop 1.1s ease-out}
+@keyframes pop{0%{opacity:0;transform:scale(.3)}15%{opacity:1;transform:scale(1.2)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.9) translateY(-10px)}}
+.flame{position:absolute;left:0;top:0;font-size:28px;line-height:1;pointer-events:none;z-index:4}
+.roar{position:absolute;left:0;top:0;font:900 22px Cinzel,serif;color:#ffdd8a;text-shadow:0 2px 0 #7a1d00,0 0 10px #ff5a00;pointer-events:none;z-index:4;white-space:nowrap}
+.dangerv{position:absolute;inset:0;pointer-events:none;z-index:3;transition:box-shadow .25s}
+.stage.close .dangerv{animation:danger2 .8s infinite}
+@keyframes danger2{50%{box-shadow:inset 0 0 80px 14px #ff2a00aa}}
+.stage.heat .dangerv{box-shadow:inset 0 0 130px 40px #ff7a00cc;animation:none}
+.hud2{position:absolute;top:0;left:0;right:0;padding:calc(8px + env(safe-area-inset-top)) 12px 18px;background:linear-gradient(#000b,#0000);z-index:5}
+.hud2 .r1{display:flex;gap:6px;justify-content:space-between;align-items:center}
+.hud2 .land{max-width:42%;overflow:hidden;text-overflow:ellipsis}
+.meter{display:flex;align-items:center;gap:8px;margin-top:8px;color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 2px #000}
+.meter .gap{flex:1;margin:0;box-shadow:0 0 0 1px #0006}
+.dtag{position:absolute;z-index:5;background:#000c;color:#fff;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:700;transform:translate(-50%,-100%);display:none;white-space:nowrap}
+.sheet{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(100%,720px);max-height:56%;overflow-y:auto;background:var(--parch);color:var(--ink);border-radius:20px 20px 0 0;padding:10px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(0,0,0,.45);z-index:6;-webkit-overflow-scrolling:touch}
+.sheet::before{content:"";display:block;width:44px;height:5px;border-radius:3px;background:#c7a96a;margin:0 auto 10px}
+.sheet .feedback{color:#eef4f2}
+.sheet .btn.ghost{color:var(--ink);border-color:#c7a96a}
+.sheet .muted{color:#7a6440}
+.sheet .stmt{background:#fffaf0;box-shadow:inset 0 0 0 2px #dcc796}
+.sheet .bar{background:#e6d6ad}
+@media (max-width:420px){.hud2 .land{display:none}}
+/* ---------- class race ---------- */
+.ghost{z-index:1;opacity:.75}
+.ghost .in{font-size:30px;filter:saturate(.6)}
+.ghost .nm{position:absolute;left:0;top:4px;transform:translateX(-50%);background:#000a;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;white-space:nowrap}
+.big2{font-size:16px}
+.rtop{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.rtop span{background:#000a;color:#fff;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px}
+.rtop span.me{background:var(--gold);color:#2a1b02}
+.cd{position:absolute;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;font:900 90px Cinzel,serif;color:#ffd77a;text-shadow:0 6px 0 #6b3d00,0 0 30px #000;background:#0006;pointer-events:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+.chip{background:#fff8e6;color:var(--ink);border:1.5px solid #dcc796;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px}
+.chip.me{background:var(--gold)}
+.hboard{padding:8px 4px}
+.hhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.htime{font:900 40px Cinzel,serif;color:var(--gold)}
+.lanes{--lx:240px;position:relative;background:linear-gradient(90deg,#1c3033 0,#1c3033 var(--lx),#2c4a2a var(--lx),#3c5a2a 100%);border-radius:14px;overflow:hidden;border:2px solid #35585d}
+.lane{position:absolute;left:0;right:0;display:flex;align-items:center;transition:top .8s ease;border-bottom:1px dashed #ffffff22}
+.lane .rk{width:46px;text-align:center;font-weight:800;font-size:20px}
+.lane .nm{width:calc(var(--lx) - 46px);font-weight:700;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+.lane .rn{position:absolute;top:50%;font-size:26px;transform:translate(-50%,-50%) scaleX(-1);transition:left 2s linear}
+.lane .ds{position:absolute;right:8px;font-weight:800;color:#ffd77a;font-size:16px}
+.dline{position:absolute;top:0;bottom:0;width:4px;background:linear-gradient(#ff5a00,#ff2a00);box-shadow:0 0 18px 6px #ff5a0088;transition:left 2s linear;z-index:2}
+.dline span{position:absolute;top:-2px;left:50%;transform:translateX(-50%) scaleX(-1);font-size:40px}
+.fline{position:absolute;top:0;bottom:0;right:60px;border-left:4px dashed #fff;font-size:26px;padding-left:4px}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:16px;margin-top:20px}
+.pod{text-align:center;width:200px}.pod b{display:block;font-size:20px}.pm{font-size:56px}
+.pod div[class^=bar]{margin-top:8px;border-radius:12px 12px 0 0;font:900 40px Cinzel,serif;color:#2a1b02;background:var(--gold);display:flex;align-items:center;justify-content:center}
+.bar1{height:160px}.bar2{height:110px;background:#d8d8d8!important}.bar3{height:80px;background:#d79a5b!important}
+/* ---------- questions ---------- */
+.qtype{font-size:12px;font-weight:800;color:#8a6a33;text-transform:uppercase;letter-spacing:1px}
+.ctx{background:#fff3cf;border-left:4px solid var(--gold);padding:8px 10px;border-radius:6px;margin:8px 0;font-size:15px}
+.qtext{font-size:20px;line-height:1.45;margin:8px 0 14px;font-weight:600}
+.blank{display:inline-block;min-width:70px;border-bottom:2px solid var(--ink)}
+.opts{display:grid;gap:10px}
+.opt{background:#fffaf0;border:2px solid #dcc796;border-radius:10px;padding:14px;font:600 17px Inter,sans-serif;color:var(--ink);text-align:left;cursor:pointer}
+.opt.right{background:#d6f3e3;border-color:var(--green)}.opt.wrong{background:#fbdcd8;border-color:var(--red)}
+.slot{min-height:60px;border:2px dashed #c7a96a;border-radius:10px;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;margin-bottom:12px;background:#fffaf0}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.tile{background:#efe2bf;border:2px solid #b99a5b;border-bottom-width:4px;border-radius:9px;padding:9px 12px;font:600 16px Inter,sans-serif;color:var(--ink);cursor:pointer}
+.slot .tile{background:#fff}
+.tile.used{visibility:hidden}
+.sentence{display:flex;flex-wrap:wrap;gap:6px;line-height:1.6}
+.word{background:transparent;border:0;border-bottom:2px dotted #b99a5b;padding:4px;font:600 19px Inter,sans-serif;color:var(--ink);cursor:pointer;border-radius:4px}
+.word.right{background:#d6f3e3}.word.wrong{background:#fbdcd8}
+.feedback{margin-top:12px;border-radius:12px;padding:14px;font-size:16px;line-height:1.5}
+.feedback.ok{background:#143326;border:1px solid var(--green)}.feedback.no{background:#3a1c18;border:1px solid var(--red)}
+.hintbox{margin-top:12px;background:#fff3c9;color:var(--ink);border-left:4px solid var(--gold);padding:10px 12px;border-radius:6px;font-size:15px}
+.stmt{background:var(--parch);color:var(--ink);border-radius:10px;padding:20px 16px;font-size:20px;font-weight:600;line-height:1.45;min-height:110px;display:flex;align-items:center;justify-content:center;text-align:center}
+.bar{height:8px;background:#2a3b3e;border-radius:4px;overflow:hidden;margin:12px 0}
+.bar i{display:block;height:100%;background:var(--red);width:100%}
+.judge{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.judge .btn{padding:20px 10px;font-size:19px}
+.flash{min-height:26px;margin-top:10px;font-weight:700}
+#overlay{position:fixed;inset:0;background:rgba(6,12,13,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+#overlay.hidden{display:none}
+#overlay .box{max-width:420px;text-align:center}
+.big{font-size:60px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#000d;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:60;max-width:90vw}
+#toast.show{opacity:1}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #22393c}
+th{color:var(--muted);font-size:13px;font-weight:600}
+tr.me td{background:#33290f;color:var(--gold)}
+.bag{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.bag .it{background:var(--parch);color:var(--ink);border-radius:12px;padding:14px;text-align:center}
+.bag .it .e{font-size:40px}.bag .it.no{filter:grayscale(1);opacity:.4}
+.board-mode #app{max-width:1100px}
+.board-mode td,.board-mode th{font-size:24px;padding:14px}
+.foot{text-align:center;color:#4f6b67;font-size:12px;margin-top:30px}
+.spinner{width:34px;height:34px;border:4px solid #2c4a4f;border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:30px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (max-width:480px){.qtext{font-size:18px}.logo{font-size:30px}.stmt{font-size:18px}.word{font-size:17px}th,td{padding:8px 5px;font-size:14px}.scene{height:170px}.dragon{font-size:56px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="overlay" class="hidden"><div class="box" id="overlayBox"></div></div>
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   SETTINGS — edit these
+   ===================================================================== */
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbzYJbflZvYwHk5MSUUv-TzxdW7ualqDdEeGI7NTRMDZHC3x_5uMEZmxE7W1GHfMaa9qmA/exec",               // ← paste your Google Apps Script Web App URL here. Empty = demo mode.
+  MAX_ATTEMPTS: 3,           // attempts per land (best attempt counts) — keep the same in Code.gs
+  MAX_STRIKES: 3,            // strike 3 = level auto-submitted
+  STRIKE_PENALTY: 100,       // points lost on strike 2
+  HINT_COST: 30,             // points per hint
+  START_GAP: 40,             // metres between you and the dragon at the start
+  LEADERBOARD_REFRESH_MS: 15000,
+  RACE_TRACK: 500,           // class race: length of the track in metres
+  RACE_POLL_MS: 3000,        // class race: how often each phone sends its position (ms)
+  CREDIT: "Herianto, S.Si. — TOSA Informatika"
+};
+
+/* =====================================================================
+   WORD BANKS for the question generators
+   Add more rows to any list to get even more different questions.
+   ===================================================================== */
+// PASSIVE — verb forms [V1, V2, V3, V-s, V-ing]; objects/agents [phrase, plural?]; inst = no continuous tenses
+const ACTIONS = [
+  {v:["clean","cleaned","cleaned","cleans","cleaning"], o:[["the classroom",0],["the windows",1],["the dormitory",0]], a:[["the students",1],["the janitor",0]]},
+  {v:["write","wrote","written","writes","writing"], o:[["the report",0],["the letters",1],["the school news",0]], a:[["the secretary",0],["the journalists",1]]},
+  {v:["build","built","built","builds","building"], o:[["the new houses",1],["the mosque",0],["the fence",0]], a:[["the workers",1],["a local company",0]]},
+  {v:["repair","repaired","repaired","repairs","repairing"], o:[["the old computer",0],["the broken chairs",1],["the roof",0]], a:[["the technician",0],["the students",1]]},
+  {v:["steal","stole","stolen","steals","stealing"], o:[["the money",0],["the bicycles",1],["the painting",0]], a:[["a thief",0],["two men",1]], inst:1},
+  {v:["make","made","made","makes","making"], o:[["the cake",0],["these bags",1],["the decorations",1]], a:[["my mother",0],["local women",1]]},
+  {v:["send","sent","sent","sends","sending"], o:[["the invitation",0],["the packages",1],["the results",1]], a:[["the committee",0],["the office",0]]},
+  {v:["choose","chose","chosen","chooses","choosing"], o:[["the winner",0],["the new captain",0],["the best essays",1]], a:[["the judges",1],["the principal",0]], inst:1},
+  {v:["wash","washed","washed","washes","washing"], o:[["the dishes",1],["the car",0],["the uniforms",1]], a:[["the cook",0],["the boys",1]]},
+  {v:["give","gave","given","gives","giving"], o:[["the prizes",1],["the certificate",0]], a:[["the headmaster",0],["the guests",1]]},
+  {v:["break","broke","broken","breaks","breaking"], o:[["the window",0],["the glasses",1],["the vase",0]], a:[["the cat",0],["the children",1]], inst:1},
+  {v:["check","checked","checked","checks","checking"], o:[["the homework",0],["the answers",1],["the tickets",1]], a:[["the teacher",0],["the officers",1]]},
+  {v:["plant","planted","planted","plants","planting"], o:[["the trees",1],["a mango tree",0],["the flowers",1]], a:[["the farmers",1],["the scouts",1]]},
+  {v:["deliver","delivered","delivered","delivers","delivering"], o:[["the newspapers",1],["the parcel",0],["the food",0]], a:[["the courier",0],["a young boy",0]]},
+  {v:["sell","sold","sold","sells","selling"], o:[["fresh fish",0],["the shrimps",1]], a:[["the fishermen",1]]},
+  {v:["sell","sold","sold","sells","selling"], o:[["the old books",1],["the tickets",1]], a:[["a shopkeeper",0],["the committee",0]]},
+  {v:["find","found","found","finds","finding"], o:[["the lost key",0],["the missing books",1]], a:[["a student",0],["the guard",0]], inst:1},
+  {v:["cook","cooked","cooked","cooks","cooking"], o:[["the rice",0],["the meals",1]], a:[["the chef",0],["the mothers",1]]},
+  {v:["paint","painted","painted","paints","painting"], o:[["the fence",0],["the walls",1]], a:[["my father",0],["the volunteers",1]]},
+  {v:["take","took","taken","takes","taking"], o:[["the photos",1],["the class picture",0]], a:[["our teacher",0],["the photographer",0]]},
+  {v:["eat","ate","eaten","eats","eating"], o:[["the cake",0],["the bananas",1]], a:[["the monkeys",1],["my little brother",0]]},
+  {v:["read","read","read","reads","reading"], o:[["the announcement",0],["the names",1]], a:[["the principal",0],["the class leaders",1]]},
+  {v:["open","opened","opened","opens","opening"], o:[["the gate",0],["the boxes",1]], a:[["the guard",0],["the children",1]]},
+  {v:["carry","carried","carried","carries","carrying"], o:[["the boxes",1],["the heavy bag",0]], a:[["two porters",1],["my brother",0]]},
+  {v:["teach","taught","taught","teaches","teaching"], o:[["English",0],["the new songs",1]], a:[["Bu Sinta",0],["the senior students",1]]}
+];
+// passive tense frames: act = active verb phrase, pas = passive verb phrase, bad = wrong passive forms
+const PF = {
+  ps:   {time:["every day","every week","every morning"], act:(f,ap)=>[ap?f[0]:f[3]], pas:(f,p)=>[p?"are":"is",f[2]],
+         bad:(f,p)=>[[p?"is":"are",f[2]],[p?"are":"is",f[4]],[p?f[0]:f[3]],[p?"are":"is",f[1]],[p?"are":"is",f[0]]], h:"Present simple passive: am / is / are + V3."},
+  past: {time:["yesterday","last week","last night","two days ago"], act:f=>[f[1]], pas:(f,p)=>[p?"were":"was",f[2]],
+         bad:(f,p)=>[[p?"was":"were",f[2]],[p?"were":"was",f[4]],[f[1]],[p?"were":"was",f[0]],[p?"were":"was",f[1]]], h:"Past simple passive: was / were + V3."},
+  pp:   {time:[""], act:(f,ap)=>[ap?"have":"has","just",f[2]], pas:(f,p)=>[p?"have":"has","just","been",f[2]],
+         bad:(f,p)=>[[p?"has":"have","just","been",f[2]],[p?"have":"has","just",f[2]],[p?"have":"has","just","being",f[2]],[p?"have":"has","just","been",f[1]],[p?"have":"has","just","be",f[2]]], h:"Present perfect passive: has / have + been + V3."},
+  pc:   {time:["right now","at the moment"], act:(f,ap)=>[ap?"are":"is",f[4]], pas:(f,p)=>[p?"are":"is","being",f[2]],
+         bad:(f,p)=>[[p?"is":"are","being",f[2]],[p?"are":"is","been",f[2]],[p?"are":"is",f[4]],[p?"are":"is","being",f[1]],[p?"are":"is","being",f[0]]], h:"Present continuous passive: am / is / are + being + V3."},
+  pastc:{time:["when I arrived","when the bell rang"], act:(f,ap)=>[ap?"were":"was",f[4]], pas:(f,p)=>[p?"were":"was","being",f[2]],
+         bad:(f,p)=>[[p?"was":"were","being",f[2]],[p?"were":"was","been",f[2]],[p?"were":"was",f[4]],[p?"were":"was","being",f[1]]], h:"Past continuous passive: was / were + being + V3."},
+  fut:  {time:["tomorrow","next week"], act:f=>["will",f[0]], pas:f=>["will","be",f[2]],
+         bad:f=>[["will",f[0]],["will","been",f[2]],["will","being",f[2]],["will","be",f[1]],["will",f[2]]], h:"Future passive: will + be + V3."},
+  modal:{time:["before Friday","as soon as possible"], act:(f,ap,m)=>[m,f[0]], pas:(f,p,m)=>[m,"be",f[2]],
+         bad:(f,p,m)=>[[m,f[0]],[m,"been",f[2]],[m,"to","be",f[2]],[m,"be",f[1]]], h:"Modal passive: modal (must / should / can) + be + V3."},
+  pperf:{time:["before the guests arrived","before we came"], act:f=>["had",f[2]], pas:f=>["had","been",f[2]],
+         bad:f=>[["had",f[2]],["had","being",f[2]],["had","been",f[1]],["had","be",f[2]]], h:"Past perfect passive: had + been + V3."}
+};
+
+// CONDITIONALS — if-part [subject, 3rd-person-singular?, [V1,V2,V3,V-s], rest]; result-part the same
+const COND = [
+  {i:["you",0,["study","studied","studied","studies"],"hard"], r:["you",0,["pass","passed","passed","passes"],"the exam"]},
+  {i:["it",1,["rain","rained","rained","rains"],"heavily"], r:["we",0,["stay","stayed","stayed","stays"],"at home"]},
+  {i:["she",1,["leave","left","left","leaves"],"early"], r:["she",1,["catch","caught","caught","catches"],"the bus"]},
+  {i:["you",0,["eat","ate","eaten","eats"],"too much"], r:["you",0,["feel","felt","felt","feels"],"sick"]},
+  {i:["we",0,["take","took","taken","takes"],"a taxi"], r:["we",0,["arrive","arrived","arrived","arrives"],"on time"]},
+  {i:["he",1,["practice","practiced","practiced","practices"],"every day"], r:["he",1,["win","won","won","wins"],"the competition"]},
+  {i:["they",0,["save","saved","saved","saves"],"enough money"], r:["they",0,["buy","bought","bought","buys"],"a new laptop"]},
+  {i:["I",0,["have","had","had","has"],"a car"], r:["I",0,["drive","drove","driven","drives"],"you home"]},
+  {i:["you",0,["water","watered","watered","waters"],"the plants"], r:["they",0,["grow","grew","grown","grows"],"well"]},
+  {i:["the bus",1,["come","came","come","comes"],"late"], r:["we",0,["miss","missed","missed","misses"],"the first lesson"]},
+  {i:["she",1,["know","knew","known","knows"],"the answer"], r:["she",1,["tell","told","told","tells"],"us"]},
+  {i:["you",0,["ask","asked","asked","asks"],"the teacher"], r:["she",1,["help","helped","helped","helps"],"you"]},
+  {i:["we",0,["leave","left","left","leaves"],"before six"], r:["we",0,["avoid","avoided","avoided","avoids"],"the traffic jam"]},
+  {i:["they",0,["invite","invited","invited","invites"],"us"], r:["we",0,["come","came","come","comes"],"to the party"]},
+  {i:["he",1,["wake","woke","woken","wakes"],"up early"], r:["he",1,["see","saw","seen","sees"],"the sunrise"]},
+  {i:["you",0,["turn","turned","turned","turns"],"off the lights"], r:["you",0,["save","saved","saved","saves"],"electricity"]},
+  {i:["the students",0,["listen","listened","listened","listens"],"carefully"], r:["they",0,["understand","understood","understood","understands"],"the lesson"]},
+  {i:["Rina",1,["join","joined","joined","joins"],"the debate club"], r:["she",1,["improve","improved","improved","improves"],"her English"]},
+  {i:["we",0,["finish","finished","finished","finishes"],"early"], r:["we",0,["go","went","gone","goes"],"swimming"]},
+  {i:["I",0,["find","found","found","finds"],"your book"], r:["I",0,["give","gave","given","gives"],"it back to you"]},
+  {i:["we",0,["plant","planted","planted","plants"],"more trees"], r:["the air",1,["become","became","become","becomes"],"cleaner"]},
+  {i:["he",1,["drive","drove","driven","drives"],"carefully"], r:["he",1,["have","had","had","has"],"fewer accidents"]},
+  {i:["they",0,["bring","brought","brought","brings"],"umbrellas"], r:["they",0,["stay","stayed","stayed","stays"],"dry"]},
+  {i:["she",1,["read","read","read","reads"],"the instructions"], r:["she",1,["make","made","made","makes"],"fewer mistakes"]},
+  {i:["I",0,["win","won","won","wins"],"a scholarship"], r:["I",0,["study","studied","studied","studies"],"in Japan"]}
+];
+const COND_WERE = [ // type 2 with WERE: [if-subject, present form, rest of sentence]
+  ["I","am","you, I would apologize to her."],["I","am","rich, I would build a school in my village."],
+  ["she","is","here, she would help us."],["the weather","is","better, we would go to the beach."],
+  ["my brother","is","taller, he would join the basketball team."],["he","is","the principal, he would make Friday a holiday."]];
+/* =====================================================================
+   QUESTION GENERATORS — each returns a "slot" (sentence with one blank)
+   that becomes a choose / build / spot / dragon-fire question.
+   ===================================================================== */
+const rnd = n => Math.floor(Math.random()*n);
+const pick = a => a[rnd(a.length)];
+const uniq = a => [...new Set(a)];
+const cap = s => s ? s[0].toUpperCase()+s.slice(1) : s;
+const joinS = (...p) => p.filter(x => x!==undefined && x!==null && String(x).trim()!=="").join(" ").replace(/\s+([,.!?])/g,"$1");
+
+function gPassive(frames){
+  return () => {
+    const ai=rnd(ACTIONS.length), A=ACTIONS[ai];
+    const fr = pick(frames.filter(k => !(A.inst && ["ps","pc","pastc","fut","modal"].includes(k)))), F=PF[fr];
+    const oi=rnd(A.o.length), gi=rnd(A.a.length), ti=rnd(F.time.length);
+    const [obj,p]=A.o[oi], [ag,ap]=A.a[gi], time=F.time[ti];
+    const m = pick(["must","should"]);
+    const ans = F.pas(A.v,p,m).join(" ");
+    const wrongs = uniq(F.bad(A.v,p,m).map(x=>x.join(" "))).filter(x=>x!==ans);
+    const active = joinS(cap(ag), F.act(A.v,ap,m).join(" "), obj, time)+".";
+    const alt = [joinS(cap(obj), ans, time)];
+    if (time) alt.push(joinS(time, obj, ans, "by", ag));
+    return {key:`pv.${fr}.${ai}.${oi}.${gi}.${ti}`, pre:cap(obj), ans, wrongs, post:joinS("by", ag, time)+".", h:F.h,
+            build:{q:`Make it passive: “${active}”`, alt}};
+  };
+}
+const COND_HINT = {1:"Type 1 (real future): If + present simple, will + V1. Never WILL after IF.",
+                   2:"Type 2 (unreal now): If + past simple, would + V1.",
+                   3:"Type 3 (unreal past): If + had + V3, would have + V3."};
+function gCond(types){
+  return () => {
+    const ci=rnd(COND.length), C=COND[ci], t=pick(types), slot=pick(["if","res"]);
+    const [is,i3,iv,ir]=C.i, [rs,r3,rv,rr]=C.r;
+    const ifv = t===1 ? (i3?iv[3]:iv[0]) : t===2 ? iv[1] : "had "+iv[2];
+    const res = t===1 ? "will "+rv[0] : t===2 ? "would "+rv[0] : "would have "+rv[2];
+    let wr;
+    if (slot==="if") wr = t===1 ? ["will "+iv[0],"would "+iv[0],"had "+iv[2]]
+                       : t===2 ? ["will "+iv[0],"would "+iv[0], i3?iv[3]:iv[0]]
+                       : ["would have "+iv[2],"have "+iv[2],"had "+iv[0],"has "+iv[2]];
+    else wr = t===1 ? ["would "+rv[0],"would have "+rv[2],"will "+rv[1],"will to "+rv[0]]
+            : t===2 ? ["will "+rv[0],"would "+rv[1],"would to "+rv[0],"would "+rv[3]]
+            : ["will have "+rv[2],"would had "+rv[2],"would have "+rv[0],"would has "+rv[2]];
+    const ans = slot==="if" ? ifv : res;
+    wr = uniq(wr).filter(x=>x!==ans);
+    const pre  = slot==="if" ? joinS("If", is) : joinS("If", is, ifv, ir)+", "+rs;
+    const post = slot==="if" ? joinS(ir+",", rs, res, rr)+"." : rr+".";
+    return {key:`cd.${t}.${slot}.${ci}`, pre, ans, wrongs:wr, post, h:COND_HINT[t],
+            build:{q:`Type ${t} conditional: (${is} / ${iv[0]} ${ir} → ${rs} / ${rv[0]} ${rr})`, alt:[joinS(rs, res, rr, "if", is, ifv, ir)]}};
+  };
+}
+function gCondWere(){
+  return () => { const i=rnd(COND_WERE.length), [s,pres,rest]=COND_WERE[i];
+    return {key:`cw.${i}`, pre:`If ${s}`, ans:"were", wrongs:[pres,"will be","be"], post:rest, h:"Type 2 with BE: use WERE for every subject (If I were you…)."}; };
+}
+/* =====================================================================
+   WORD BANKS & GENERATORS for the Class XI syllabus
+   ===================================================================== */
+// subjects: [text, person ("1" = I, "3" = he/she/it, "p" = you/we/they/plural), proper name?]
+const SUBJ = [["I","1"],["You","p"],["We","p"],["They","p"],["She","3"],["He","3"],["My brother","3"],["Rina","3",1],["The students","p"],["Our teacher","3"],["My parents","p"],["Andi","3",1]];
+const lcs = s => (s[0]==="I" || s[2]) ? s[0] : s[0][0].toLowerCase()+s[0].slice(1);
+const BE  = {"1":"am","3":"is","p":"are"}, BENOT = {"1":"am not","3":"isn't","p":"aren't"};
+const BEP = {"1":"was","3":"was","p":"were"}, BEPNOT = {"1":"wasn't","3":"wasn't","p":"weren't"};
+const OTHER = (map, k) => uniq(Object.values(map)).filter(x => x!==map[k]);
+const ing = v => /ie$/.test(v) ? v.slice(0,-2)+"ying" : /[^e]e$/.test(v) ? v.slice(0,-1)+"ing" : v+"ing";
+
+// PRESENT TENSE (verbal): [V1, V-s, rest]
+const PRES_V = [["go","goes","to school by bus"],["eat","eats","breakfast at six"],["play","plays","football every afternoon"],["study","studies","English every night"],["watch","watches","the news after dinner"],["wash","washes","the dishes after lunch"],["read","reads","the Qur'an every morning"],["drink","drinks","milk before bed"],["have","has","lunch at noon"],["do","does","homework in the evening"],["clean","cleans","the room every Saturday"],["visit","visits","the library on Fridays"],["walk","walks","to the mosque five times a day"],["speak","speaks","English at school"]];
+// nominal complements (after am / is / are, was / were)
+const NOM = ["tired","in the library","happy today","from Bone","very busy","at home now","ready for the test","late again"];
+const NOM_PAST = ["at home","tired","in the library","sick","late for school","very happy"];
+const PAST_TIME = ["yesterday","last night","last Sunday","two days ago","last week"];
+const PRES_HINT = {aff:"Simple present: V1 for I / you / we / they, V1 + s/es for he / she / it.", neg:"Negative: don't / doesn't + V1 (doesn't for he / she / it).", q:"Question: Do / Does + subject + V1? (Does for he / she / it).",
+                   naff:"Nominal sentence: I am, he / she / it is, you / we / they are.", nneg:"Nominal negative: am not / isn't / aren't (not don't).", nq:"Nominal question: Am / Is / Are + subject …?"};
+function gPresent(){
+  return () => {
+    const si=rnd(SUBJ.length), S0=SUBJ[si], ps=S0[1], p3=ps==="3", f=pick(["aff","neg","q","naff","nneg","nq"]);
+    if (f[0]!=="n") {
+      const vi=rnd(PRES_V.length), [v1,vs,rest]=PRES_V[vi];
+      const cue = `${S0[0]} / ${v1} ${rest}`;
+      if (f==="aff") return {key:`pr.a.${si}.${vi}`, pre:S0[0], ans:p3?vs:v1, wrongs:[p3?v1:vs, ing(v1), BE[ps]+" "+v1], post:rest+".", h:PRES_HINT.aff, build:{q:`Present tense: (${cue})`}};
+      if (f==="neg") return {key:`pr.n.${si}.${vi}`, pre:S0[0], ans:(p3?"doesn't ":"don't ")+v1, wrongs:[(p3?"don't ":"doesn't ")+v1,(p3?"doesn't ":"don't ")+vs,BENOT[ps]+" "+v1], post:rest+".", h:PRES_HINT.neg, build:{q:`Present tense, negative: (${cue})`}};
+      return {key:`pr.q.${si}.${vi}`, pre:"", ans:p3?"Does":"Do", wrongs:[p3?"Do":"Does", cap(BE[ps]), p3?"Has":"Have"], post:`${lcs(S0)} ${v1} ${rest}?`, h:PRES_HINT.q, build:{q:`Present tense, question: (${cue})`}};
+    }
+    const ci=rnd(NOM.length), c=NOM[ci], cue=`${S0[0]} / be ${c}`;
+    if (f==="naff") return {key:`pr.na.${si}.${ci}`, pre:S0[0], ans:BE[ps], wrongs:[...OTHER(BE,ps),"be"], post:c+".", h:PRES_HINT.naff, build:{q:`Present tense: (${cue})`}};
+    if (f==="nneg") return {key:`pr.nn.${si}.${ci}`, pre:S0[0], ans:BENOT[ps], wrongs:[p3?"doesn't":"don't", ...OTHER(BENOT,ps)], post:c+".", h:PRES_HINT.nneg, build:{q:`Present tense, negative: (${cue})`}};
+    return {key:`pr.nq.${si}.${ci}`, pre:"", ans:cap(BE[ps]), wrongs:[p3?"Does":"Do", ...OTHER(BE,ps).map(cap)], post:`${lcs(S0)} ${c}?`, h:PRES_HINT.nq, build:{q:`Present tense, question: (${cue})`}};
+  };
+}
+
+// COMPARISON: [[base, comparative, superlative], A, B, superlative sentence]
+const CMP = [
+  [["tall","taller","tallest"],"Andi","Budi","Andi is the ___ student in our class."],
+  [["big","bigger","biggest"],"An elephant","a horse","The blue whale is the ___ animal in the world."],
+  [["fast","faster","fastest"],"A plane","a train","The cheetah is the ___ animal on land."],
+  [["hot","hotter","hottest"],"Makassar","Malino","October is the ___ month of the year here."],
+  [["cheap","cheaper","cheapest"],"Riding a bike","taking a taxi","This is the ___ shop in the market."],
+  [["heavy","heavier","heaviest"],"My bag","your bag","This box is the ___ one in the room."],
+  [["easy","easier","easiest"],"The first question","the last question","Number one is the ___ question in the test."],
+  [["expensive","more expensive","most expensive"],"A car","a motorbike","This is the ___ phone in the shop."],
+  [["beautiful","more beautiful","most beautiful"],"The sunset","the sunrise here","Bantimurung is the ___ place I have ever visited."],
+  [["difficult","more difficult","most difficult"],"Physics","art","This is the ___ problem in the book."],
+  [["good","better","best"],"Your essay","my essay","She is the ___ singer in our school."],
+  [["bad","worse","worst"],"This road","that road","That was the ___ film I have ever seen."],
+  [["interesting","more interesting","most interesting"],"The book","the film","History is the ___ subject for me."],
+  [["popular","more popular","most popular"],"Football","badminton","Coto Makassar is the ___ dish in our city."],
+  [["old","older","oldest"],"My grandfather","my grandmother","Fort Rotterdam is the ___ building in the city."],
+  [["small","smaller","smallest"],"A mouse","a cat","This is the ___ room in the dormitory."],
+  [["happy","happier","happiest"],"Rina","her sister","Today is the ___ day of my life."],
+  [["large","larger","largest"],"Our new dormitory","the old one","Jakarta is the ___ city in Indonesia."],
+  [["careful","more careful","most careful"],"Nadia","her brother","Nadia is the ___ driver in her family."]];
+const lcA = s => /^(A|An|The|My|Your|Our|This|That|Riding|Physics|Football)\b/.test(s) ? s[0].toLowerCase()+s.slice(1) : s;
+function gCompare(){
+  return () => {
+    const i=rnd(CMP.length), [[b,c,s],A,B,sup]=CMP[i], f=pick(["cmp","cmp","sup","asas"]);
+    const dbl = c.startsWith("more ") ? b+(b.endsWith("e")?"r":"er") : "more "+c;
+    const dbs = s.startsWith("most ") ? b+(b.endsWith("e")?"st":"est") : "most "+s;
+    if (f==="cmp") return {key:`cp.c.${i}`, pre:`${A} is`, ans:c, wrongs:[b, s, dbl], post:`than ${B}.`, h:"Comparative: short adjective + -er, long adjective: more + adjective … THAN.",
+                           build:{q:`Compare: (${A} / ${b} / ${B})`}};
+    if (f==="sup") { const [pre,post]=sup.split("___");
+      return {key:`cp.s.${i}`, pre:pre.trim(), ans:s, wrongs:[c, b, dbs], post:post.trim(), h:"Superlative: THE + adjective-est, or THE MOST + long adjective."}; }
+    return {key:`cp.a.${i}`, pre:`${cap(B)} is not as`, ans:b, wrongs:[c, s, dbl], post:`as ${lcA(A)}.`, h:"AS + adjective (base form) + AS. No -er and no ‘more’.",
+            build:{q:`Use “not as … as”: (${cap(B)} / ${b} / ${lcA(A)})`}};
+  };
+}
+
+// PAST TENSE (verbal): [V1, V-s, V2, rest]
+const PAST_V = [["go","goes","went","to the market"],["eat","eats","ate","nasi kuning for breakfast"],["buy","buys","bought","a new bag"],["visit","visits","visited","my grandmother"],["play","plays","played","football in the rain"],["write","writes","wrote","a letter to my parents"],["see","sees","saw","a big snake in the garden"],["study","studies","studied","for the test"],["watch","watches","watched","a football match"],["take","takes","took","many photos"],["clean","cleans","cleaned","the dormitory"],["make","makes","made","a cake"],["meet","meets","met","an old friend"],["swim","swims","swam","in the river"],["forget","forgets","forgot","the homework"],["win","wins","won","a prize"],["drink","drinks","drank","a glass of milk"],["cook","cooks","cooked","fried rice"],["wake","wakes","woke","up late"],["bring","brings","brought","some snacks"]];
+const regPast = v => /e$/.test(v) ? v+"d" : /[^aeiou]y$/.test(v) ? v.slice(0,-1)+"ied" : v+"ed";
+const PAST_HINT = {aff:"Simple past: V2 for finished actions (yesterday, last …, … ago).", neg:"Past negative: didn't + V1 (not didn't + V2).", q:"Past question: Did + subject + V1?",
+                   naff:"Nominal past: I / he / she / it WAS, you / we / they WERE.", nneg:"Nominal past negative: wasn't / weren't (not didn't).", nq:"Nominal past question: Was / Were + subject …?"};
+function gPast(){
+  return () => {
+    const si=rnd(SUBJ.length), S0=SUBJ[si], ps=S0[1], p3=ps==="3", ti=rnd(PAST_TIME.length), t=PAST_TIME[ti], f=pick(["aff","aff","neg","q","naff","nneg","nq"]);
+    if (f[0]!=="n") {
+      const vi=rnd(PAST_V.length), [v1,vs,v2,rest]=PAST_V[vi], cue=`${S0[0]} / ${v1} ${rest} / ${t}`;
+      if (f==="aff") { const r=regPast(v1);
+        return {key:`pa.a.${si}.${vi}.${ti}`, pre:S0[0], ans:v2, wrongs:[v1, vs, r!==v2 ? r : "did "+v2], post:`${rest} ${t}.`, h:PAST_HINT.aff, build:{q:`Past tense: (${cue})`}}; }
+      if (f==="neg") return {key:`pa.n.${si}.${vi}.${ti}`, pre:S0[0], ans:"didn't "+v1, wrongs:["didn't "+v2,(p3?"doesn't ":"don't ")+v1,BEPNOT[ps]+" "+v1], post:`${rest} ${t}.`, h:PAST_HINT.neg, build:{q:`Past tense, negative: (${cue})`}};
+      return {key:`pa.q.${si}.${vi}.${ti}`, pre:"", ans:"Did", wrongs:[p3?"Does":"Do", cap(BEP[ps]), p3?"Has":"Have"], post:`${lcs(S0)} ${v1} ${rest} ${t}?`, h:PAST_HINT.q, build:{q:`Past tense, question: (${cue})`}};
+    }
+    const ci=rnd(NOM_PAST.length), c=NOM_PAST[ci], cue=`${S0[0]} / be ${c} / ${t}`;
+    if (f==="naff") return {key:`pa.na.${si}.${ci}.${ti}`, pre:S0[0], ans:BEP[ps], wrongs:[OTHER(BEP,ps)[0], BE[ps], "be"], post:`${c} ${t}.`, h:PAST_HINT.naff, build:{q:`Past tense: (${cue})`}};
+    if (f==="nneg") return {key:`pa.nn.${si}.${ci}.${ti}`, pre:S0[0], ans:BEPNOT[ps], wrongs:[OTHER(BEPNOT,ps)[0], "didn't", BENOT[ps]], post:`${c} ${t}.`, h:PAST_HINT.nneg, build:{q:`Past tense, negative: (${cue})`}};
+    return {key:`pa.nq.${si}.${ci}.${ti}`, pre:"", ans:cap(BEP[ps]), wrongs:[cap(OTHER(BEP,ps)[0]), "Did", cap(BE[ps])], post:`${lcs(S0)} ${c} ${t}?`, h:PAST_HINT.nq, build:{q:`Past tense, question: (${cue})`}};
+  };
+}
+
+// PAST CONTINUOUS: activities [V1, V-ing, rest]; interrupting events [subject, V1, V-s, V2, rest, plural?]
+const PC_ACT = [["have","having","dinner"],["study","studying","for the test"],["watch","watching","TV"],["play","playing","football"],["read","reading","a novel"],["cook","cooking","fried rice"],["take","taking","a shower"],["do","doing","homework"],["walk","walking","to the mosque"],["clean","cleaning","the classroom"],["write","writing","an essay"],["sleep","sleeping",""]];
+const PC_EV = [["the phone","ring","rings","rang",""],["my uncle","call","calls","called","us"],["the bell","ring","rings","rang",""],["it","start","starts","started","to rain"],["the lights","go","goes","went","out",1],["someone","knock","knocks","knocked","on the door"],["the teacher","come","comes","came","in"],["my friend","arrive","arrives","arrived",""]];
+const PC_TIME = ["At 8 p.m. last night,","At this time yesterday,","At nine o'clock last night,"];
+const PC_SUBJ = SUBJ.filter(x => !["My parents","Our teacher"].includes(x[0]));
+const PC_HINT = "Past continuous: was / were + V-ing for an action in progress in the past. The short action that interrupts it uses simple past (V2).";
+function gPastCont(){
+  return () => {
+    const si=rnd(PC_SUBJ.length), S0=PC_SUBJ[si], ps=S0[1], ai=rnd(PC_ACT.length), [v1,vi,rest]=PC_ACT[ai], ei=rnd(PC_EV.length), [es,e1,es3,e2,er,epl]=PC_EV[ei];
+    const ans = BEP[ps]+" "+vi, wr = [OTHER(BEP,ps)[0]+" "+vi, BEP[ps]+" "+v1, BE[ps]+" "+vi];
+    const ev = joinS(es, e2, er), f = pick(["time","when","when","event","while"]);
+    const build = {q:`Past continuous + simple past: (${S0[0]} / ${v1} ${rest} — when ${es} / ${e1} ${er})`, sentence:joinS(S0[0], ans, rest, "when", ev)+".", alt:[joinS("When", ev+",", lcs(S0), ans, rest)]};
+    if (f==="time") { const ti=rnd(PC_TIME.length);
+      return {key:`pc.t.${si}.${ai}.${ti}`, pre:joinS(PC_TIME[ti], lcs(S0)), ans, wrongs:wr, post:(rest||"")+".", h:PC_HINT, build}; }
+    if (f==="when") return {key:`pc.w.${si}.${ai}.${ei}`, pre:S0[0], ans, wrongs:wr, post:joinS(rest, "when", ev)+".", h:PC_HINT, build};
+    if (f==="while") return {key:`pc.l.${si}.${ai}.${ei}`, pre:"While "+lcs(S0), ans, wrongs:wr, post:joinS(rest+",", ev)+".", h:PC_HINT, build};
+    return {key:`pc.e.${si}.${ai}.${ei}`, pre:joinS(S0[0], ans, rest, "when", es), ans:e2, wrongs:[e1, es3, (epl?"were ":"was ")+e1], post:(er||"")+".", h:PC_HINT, build};
+  };
+}
+
+// CONDITIONAL TYPE 0 (facts): [if-subject, 3rd?, [V1,V-s], rest, result-subject, 3rd?, [V1,V-s], rest]
+const COND0 = [
+  ["you",0,["heat","heats"],"ice","it",1,["melt","melts"],""],["you",0,["mix","mixes"],"red and blue","you",0,["get","gets"],"purple"],
+  ["water",1,["reach","reaches"],"100°C","it",1,["boil","boils"],""],["it",1,["rain","rains"],"","the ground",1,["get","gets"],"wet"],
+  ["you",0,["press","presses"],"this button","the machine",1,["start","starts"],""],["people",0,["eat","eats"],"too much sugar","they",0,["gain","gains"],"weight"],
+  ["you",0,["drop","drops"],"a glass","it",1,["break","breaks"],""],["the sun",1,["set","sets"],"","it",1,["get","gets"],"dark"],
+  ["you",0,["touch","touches"],"a hot pan","you",0,["burn","burns"],"your hand"],["plants",0,["get","gets"],"no sunlight","they",0,["die","dies"],""],
+  ["you",0,["freeze","freezes"],"water","it",1,["turn","turns"],"into ice"],["a student",1,["miss","misses"],"three classes","the teacher",1,["call","calls"],"the parents"],
+  ["you",0,["put","puts"],"oil in water","the oil",1,["float","floats"],""],["babies",0,["feel","feels"],"hungry","they",0,["cry","cries"],""]];
+function gCond0(){
+  return () => {
+    const i=rnd(COND0.length), [is,i3,iv,ir,rs,r3,rv,rr]=COND0[i], slot=pick(["if","res"]);
+    const ifv = i3?iv[1]:iv[0], res = r3?rv[1]:rv[0];
+    const ans = slot==="if" ? ifv : res;
+    const wr = slot==="if" ? ["will "+iv[0], "would "+iv[0], i3?iv[0]:iv[1]] : ["would "+rv[0], r3?rv[0]:rv[1], ing(rv[0])];
+    const pre  = slot==="if" ? joinS("If", is) : joinS("If", is, ifv, ir)+", "+rs;
+    const post = slot==="if" ? joinS((ir||"")+",", rs, res, rr)+"." : (rr||"")+".";
+    return {key:`c0.${slot}.${i}`, pre, ans, wrongs:uniq(wr).filter(x=>x!==ans), post, h:"Type 0 (facts and general truths): If + present simple, present simple.",
+            build:{q:`Type 0 conditional (a fact): (${is} / ${iv[0]} ${ir} → ${rs} / ${rv[0]} ${rr})`, alt:[joinS(rs, res, rr, "if", is, ifv, ir)]}};
+  };
+}
+
+/* =====================================================================
+   STORIES for the final land (soal bercerita)
+   {answer|wrong|wrong|wrong#topic} marks the blank in each sentence.
+   Add your own stories in the same format — 10 sentences, one blank each.
+   ===================================================================== */
+const STORY_HINT = {be:"Nominal sentence: am / is / are + noun / adjective / place.", pres:"Simple present (habits, facts): V1, or V1 + s/es for he / she / it.",
+  past:"Simple past: V2 for finished actions.", bepast:"Nominal past: was (I / he / she / it) / were (you / we / they).",
+  pc:"Past continuous: was / were + V-ing (an action in progress in the past).", pas:"Passive voice: be (is / was / were) + V3.",
+  cmp:"Comparative: -er / more … than. Superlative: the -est / the most …", c0:"Type 0 (facts): If + present, present.",
+  c1:"Type 1 (real future): If + present, will + V1.", c2:"Type 2 (unreal now): If + past (were), would + V1.", c3:"Type 3 (unreal past): If + had + V3, would have + V3."};
+const STORIES = [
+ {t:"The Locked Door", s:[
+  "Rina {is|are|am|be#be} a student at a boarding school in Bone.",
+  "Every morning, she {wakes|wake|waking|is wake#pres} up at 4:30 for Subuh prayer.",
+  "Last Monday, something strange {happened|happens|happen|was happen#past}.",
+  "While she {was taking|were taking|was take|is taking#pc} a shower, her friend locked the dormitory door by mistake.",
+  "The only spare key {was kept|was keep|kept|were kept#pas} by the dorm supervisor.",
+  "It was the {coldest|colder|cold|most coldest#cmp} morning of the year, and Rina was still wet.",
+  "If she {had brought|has brought|would bring|brings#c3} her jacket, she would not have felt so cold.",
+  "Finally, the door {was opened|opened|was open|is opened#pas} by Pak Hasan at 5:15.",
+  "Now Rina always reminds her friends, “If you {lock|will lock|locked|locking#c0} the door, nobody can come in.”",
+  "If I {were|am|will be|was being#c2} Rina, I would always keep a spare key."]},
+ {t:"The Science Fair", s:[
+  "Our school {holds|hold|holding|is hold#pres} a science fair every year.",
+  "Last year, Andi and Budi {were|was|are|is#bepast} in the same team.",
+  "Two weeks before the fair, they {made|make|makes|making#past} a small water filter from sand and charcoal.",
+  "Their filter was {cheaper|cheap|cheapest|more cheaper#cmp} than the filters in the shops.",
+  "At 9 a.m. on the day of the fair, they {were setting up|was setting up|are setting up|were set up#pc} their table.",
+  "Suddenly, their poster {fell|falls|fall|falled#past} off the wall.",
+  "The poster {was fixed|fixed|was fix|is fixed#pas} quickly by their teacher.",
+  "The judges said their project was the {most useful|usefullest|more useful|useful#cmp} of all.",
+  "Andi explained, “If you {boil|will boil|boiled|would boil#c0} water, most germs die.”",
+  "Budi said, “If we {win|will win|won|would win#c1} again next year, we will go to the national level.”"]},
+ {t:"Rain at the Market", s:[
+  "My mother usually {goes|go|going|is go#pres} to the market on Sunday mornings.",
+  "Last Sunday, I {went|go|goes|was go#past} with her.",
+  "The market {was|were|be|been#bepast} very crowded that morning.",
+  "Fish is usually {more expensive|expensiver|most expensive|expensive#cmp} than vegetables.",
+  "While my mother {was choosing|were choosing|is choosing|was choose#pc} some fish, it started to rain heavily.",
+  "Many stalls {were covered|covered|was covered|were cover#pas} with plastic sheets.",
+  "It was the {heaviest|heavier|heavy|most heaviest#cmp} rain of the month.",
+  "If it {rains|will rain|rained|raining#c0}, the market floor gets very slippery.",
+  "If I {had checked|have checked|would check|check#c3} the weather, we would have brought an umbrella.",
+  "My father asked me, “If you {go|will go|went|would go#c1} to the market tomorrow, will you take an umbrella?”"]},
+ {t:"The Football Final", s:[
+  "Our school football team {is|are|am|be#be} very strong this year.",
+  "The players {practice|practices|practicing|is practice#pres} every afternoon after Asr prayer.",
+  "Last Saturday, they {played|play|plays|playing#past} in the final against SMA 2.",
+  "In that match, the other team's players {were|was|be|been#bepast} taller than ours.",
+  "But our players were {faster|fast|fastest|more faster#cmp} than them.",
+  "In the 80th minute, while our captain {was running|were running|is running|was run#pc} toward the goal, a defender pushed him.",
+  "A penalty {was given|gave|was give|is given#pas} by the referee.",
+  "Our captain scored, and it was the {best|better|goodest|most good#cmp} moment of the season.",
+  "If he {had missed|has missed|would miss|misses#c3} the penalty, we would have lost the match.",
+  "Now the coach says, “If we {train|will train|trained|would train#c1} hard, we will win again next year.”"]},
+ {t:"Grandma's Garden", s:[
+  "My grandmother {lives|live|living|is live#pres} in a small village near Sengkang.",
+  "Her garden {is|are|am|be#be} full of mango and banana trees.",
+  "Last holiday, I {stayed|stay|stays|was stay#past} at her house for a week.",
+  "Every morning, the plants {were watered|watered|was watered|were water#pas} by my grandmother.",
+  "One afternoon, while we {were picking|was picking|are picking|were pick#pc} mangoes, a snake appeared.",
+  "It was {longer|long|longest|more longer#cmp} than my arm!",
+  "Grandma said, “Snakes are the {most dangerous|dangerousest|more dangerous|dangerous#cmp} animals in this garden.”",
+  "“If you {stay|will stay|stayed|would stay#c0} calm, snakes usually go away.”",
+  "If I {lived|live|will live|would live#c2} in her village, I would help her every day.",
+  "If I {had been|have been|would be|am#c3} braver, I would have caught the snake myself!"]},
+ {t:"The Speech Contest", s:[
+  "Nadia {loves|love|loving|is love#pres} speaking in public.",
+  "She {is|are|am|be#be} the captain of the English club.",
+  "Last month, she {joined|join|joins|was join#past} a speech contest in Makassar.",
+  "The night before the contest, she {was practicing|were practicing|is practicing|was practice#pc} in front of a mirror until 11 p.m.",
+  "Her speech {was written|was wrote|wrote|were written#pas} by herself, not by her teacher.",
+  "The other speakers were {more experienced|experienceder|most experienced|experienced#cmp} than Nadia.",
+  "However, her speech was the {most interesting|more interesting|interestingest|interesting#cmp} of all.",
+  "Her coach always says, “If you {practice|will practice|practiced|would practice#c0} every day, your voice becomes clearer.”",
+  "Nadia won second place. If she {had spoken|has spoken|would speak|speaks#c3} a little slower, she would have won first place.",
+  "She told me, “If I {join|will join|joined|would join#c1} next year, I will aim for first place.”"]},
+ {t:"The Power Cut", s:[
+  "Our dormitory {has|have|having|is have#pres} forty rooms.",
+  "Last night, the electricity {went|go|goes|was go#past} off at 9 p.m.",
+  "At that moment, I {was doing|were doing|am doing|was do#pc} my math homework.",
+  "The whole building {was|were|be|been#bepast} completely dark.",
+  "Candles {were brought|brought|was brought|were bring#pas} to every room by the supervisors.",
+  "Candlelight is much {weaker|weak|weakest|more weaker#cmp} than a lamp.",
+  "It was the {longest|longer|long|most longest#cmp} hour of my life!",
+  "If the generator {is|will be|were|being#c1} repaired soon, we will not have this problem again.",
+  "If we {had|have|will have|would have#c2} solar panels, we would not need the generator.",
+  "If I {had finished|have finished|would finish|finish#c3} my homework earlier, I would have slept on time."]},
+ {t:"The Class Trip", s:[
+  "Bantimurung {is|are|am|be#be} famous for its waterfall and butterflies.",
+  "Every year, the Grade XI students {visit|visits|visiting|are visit#pres} it on a class trip.",
+  "Last Friday, we {left|leave|leaves|leaved#past} school at 6 a.m. by bus.",
+  "During the trip, we {were singing|was singing|are singing|were sing#pc} songs all the way.",
+  "The tickets {were bought|bought|was bought|were buy#pas} by our teacher a week before.",
+  "The waterfall was {bigger|big|biggest|more bigger#cmp} than I expected.",
+  "Some students said it was the {most beautiful|beautifulest|more beautiful|beautiful#cmp} place in South Sulawesi.",
+  "Our guide said, “If you {touch|will touch|touched|would touch#c0} a butterfly's wings, the powder comes off.”",
+  "If we {had stayed|have stayed|would stay|stay#c3} longer, we would have seen the caves too.",
+  "If I {were|am|will be|was being#c2} the principal, I would make this trip every semester."]}];
+function parseStory(st){
+  return st.s.map(line => {
+    const m = line.match(/^(.*?)\{([^}]+)\}(.*)$/), [opts,code] = m[2].split("#"), o = opts.split("|");
+    return {pre:m[1].trim(), ans:o[0], wrongs:o.slice(1), post:m[3].trim(), h:STORY_HINT[code]};
+  });
+}
+function storySteps(){
+  const fresh = STORIES.map((_,i)=>i).filter(i => !S.seen.has("st."+i));
+  const si = fresh.length ? pick(fresh) : rnd(STORIES.length), st = STORIES[si], lines = parseStory(st);
+  const filled = lines.map(l => joinS(l.pre, l.ans, l.post));
+  const steps = PATTERN.map((x,k) => {
+    const l = lines[k], so = filled.slice(0,k).join(" ");
+    const sl = {...l, key:`st.${si}.${k}`, ctx: so ? `“${st.t}” — ${so}` : `“${st.t}”`, ctxLabel:"📖 The story so far:"};
+    if (x==="F") return toKind({...l, key:sl.key}, "fire");
+    return toKind(sl, k%3===1 ? "spot" : "choose") || toKind(sl, "choose");
+  });
+  return {steps, qids:["st."+si]};
+}
+
+/* =====================================================================
+   THE NINE LANDS
+   ===================================================================== */
+const LEVELS = [
+  {id:1, name:"Whispering Forest", topic:"Present Tense (nominal & verbal)", icon:"🌲", speed:.35, fire:8, gens:[gPresent()],
+   sky:["#7fc8a9","#d8f3dc"], gr:"#4a7c3a", deco:"🌲🌳🍄🌲🌳🌲", far:"⛰️☁️⛰️", loot:["🪙","Forest Coin"],
+   intro:"You found the dragon Ignis's treasure map — and woke the dragon up! Run through the Whispering Forest. Forest signs talk about habits and facts: present tense with am / is / are (nominal) and V1 / V1+s (verbal)."},
+  {id:2, name:"Giants' Valley", topic:"Comparison (-er / more … than, the -est / the most, as … as)", icon:"⛰️", speed:.4, fire:8, gens:[gCompare()],
+   sky:["#f4a261","#ffe8c2"], gr:"#a0522d", deco:"🌵🪨🗿🌵🪨", far:"🦅☁️", loot:["📿","Giant's Beads"],
+   intro:"Giants live in this valley, and they love to compare everything: taller, bigger, the biggest, as tall as…"},
+  {id:3, name:"River of Yesterday", topic:"Past Tense (nominal & verbal)", icon:"🌊", speed:.4, fire:7, gens:[gPast()],
+   sky:["#5fa8d3","#cae9ff"], gr:"#3d7a5a", deco:"🌿🪷🌾🌿🪷", far:"☁️🐦☁️", loot:["🐚","River Pearl"],
+   intro:"The river carries stories from the past. Use was / were for nominal sentences and V2 for verbal ones. Negatives and questions use didn't / Did + V1."},
+  {id:4, name:"Crystal Caves", topic:"Past Continuous (was / were + V-ing, when / while)", icon:"💎", speed:.45, fire:7, gens:[gPastCont()],
+   sky:["#2b2d42","#5c4d7d"], gr:"#3b3355", deco:"💎🪨🕯️💎🪨", far:"🦇✨🦇", loot:["💎","Cave Crystal"],
+   intro:"Echoes in the cave tell what people were doing when something happened. Long action: was / were + V-ing. Short interrupting action: V2."},
+  {id:5, name:"Canyon Bridge", topic:"Passive Voice", icon:"🌉", speed:.45, fire:7, gens:[gPassive(["ps","past","pastc"])],
+   sky:["#e9c46a","#fff3c4"], gr:"#8a5a2b", deco:"🌵🏜️🪨🌵🏜️", far:"🦅☁️🦅", loot:["🪢","Bridge Rope"],
+   intro:"The old rope bridge has missing planks. Only correct passive sentences — is / was / were (being) + V3 — will hold your weight."},
+  {id:6, name:"Cliffs of If", topic:"Conditionals (type 0 & type 1)", icon:"🏔️", speed:.5, fire:6, gens:[gCond0(), gCond([1])],
+   sky:["#90e0ef","#e0fbfc"], gr:"#6c757d", deco:"⛰️🪨🏔️⛰️🪨", far:"🦅☁️🦅", loot:["🪶","Eagle Feather"],
+   intro:"Every ledge on the cliff is a condition. Facts: If + present, present (type 0). Real future: If + present, will + V1 (type 1)."},
+  {id:7, name:"Volcano Pass", topic:"Conditionals (type 2 & type 3)", icon:"🌋", speed:.5, fire:6, gens:[gCond([2]), gCond([3]), gCondWere()],
+   sky:["#6a040f","#f48c06"], gr:"#370617", deco:"🌋🪨🔥🪨🌋", far:"💨☁️💨", loot:["🏮","Lava Lantern"],
+   intro:"The volcano is erupting! Imagine: If + past, would + V1 (type 2). Imagine the past: If + had + V3, would have + V3 (type 3)."},
+  {id:8, name:"Storm Coast", topic:"Mixed review — all grammar", icon:"⛈️", speed:.55, fire:6, mix:true, gens:[],
+   sky:["#355070","#6d597a"], gr:"#2a3d45", deco:"🌴🌊⛵🌴🌊", far:"⛈️☁️⚡", loot:["🧭","Storm Compass"],
+   intro:"A storm hits the coast and every grammar topic is mixed together. Read carefully — the dragon is getting faster!"},
+  {id:9, name:"Dragon's Lair", topic:"Story questions — all grammar in one story", icon:"🏰", speed:.3, fire:9, story:true, final:true, gens:[],
+   sky:["#1b1b2f","#5a189a"], gr:"#240046", deco:"🏰🦴🪙💀🪙", far:"🦇✨🦇", loot:["👑","Golden Crown of Words"],
+   intro:"The Golden Crown of Words lies inside the lair. On the walls, you find an old story with missing words. Read it carefully and fill in every gap to reach the crown — every grammar topic appears in the story!"}
+];
+const STORY = "Long ago, the dragon Ignis hid the Golden Crown of Words in its lair. You have found its treasure map! But the dragon has woken up, and it is chasing you. Cross the nine lands of Grammaria and collect each land's treasure. Correct, fast answers help you run faster. Mistakes and slow answers let the dragon get closer.";
+const ENDING = "You reach the lair and lift the Golden Crown of Words. Ignis lands in front of you… but instead of breathing fire, the dragon bows. “Only a true master of words can lift the crown,” it says. From today, Ignis is your guardian — and you are the Grammar Champion of Grammaria! 👑";
+const RANKS = [[0,"Explorer"],[2500,"Pathfinder"],[6500,"Treasure Hunter"],[12000,"Dragon Runner"],[17000,"Grammar Champion"]];
+const SAMPLE_ROWS = [ {name:"Sample — Aisyah", cls:"XI-2", points:7120, cases:5}, {name:"Sample — Rafi", cls:"XI-1", points:4390, cases:3}, {name:"Sample — Fikri", cls:"XI-1", points:1960, cases:2} ];
+const PATTERN = ["Q","Q","F","Q","F","Q","Q","F","Q","F"];   // Q = obstacle question, F = dragon fire
+
+/* =====================================================================
+   TURN A SLOT INTO A QUESTION
+   ===================================================================== */
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const bare = w => w.toLowerCase().replace(/[.,!?;:“”"]/g,"");
+function toKind(sl, kind){
+  const full = joinS(sl.pre, sl.ans, sl.post);
+  if (kind==="choose") {
+    const w = shuffle(sl.wrongs).slice(0,3); if (w.length<3) return null;
+    return {t:"choose", key:sl.key, ctx:sl.ctx, ctxLabel:sl.ctxLabel, q:joinS(sl.pre,"___",sl.post), o:[sl.ans,...w], a:0, h:sl.h};
+  }
+  if (kind==="spot") {
+    const at = sl.ans.split(" "), preT = sl.pre ? sl.pre.split(" ") : [], postT = sl.post.split(" ");
+    for (const w of shuffle(sl.wrongs)) {
+      const wt = w.split(" ");
+      let p=0; while (p<at.length && p<wt.length && at[p]===wt[p]) p++;
+      let s=0; while (s<at.length-p && s<wt.length-p && at[at.length-1-s]===wt[wt.length-1-s]) s++;
+      let ws=wt.slice(p,wt.length-s), cs=at.slice(p,at.length-s);
+      if (!ws.length) { p=0; s=0; ws=wt; cs=at; }          // a word is missing → mark the whole wrong phrase
+      if (ws.length>2) continue;
+      const s2 = joinS(sl.pre, [...wt.slice(0,p), "["+ws.join(" ")+"]", ...wt.slice(wt.length-s)].join(" "), sl.post);
+      return {t:"spot", key:sl.key, ctx:sl.ctx, ctxLabel:sl.ctxLabel, s:s2, f:cs.length ? cs.join(" ") : "(remove it)", h:sl.h};
+    }
+    return null;
+  }
+  if (kind==="build") {
+    if (!sl.build) return null;
+    const words = (sl.build.sentence||full).replace(/[.!?]$/,"").split(" ");
+    const have = new Set(words.map(bare));
+    const d = shuffle(uniq(sl.wrongs.flatMap(x=>x.split(" ")).map(x=>x.replace(/[.,]/g,"")).filter(x => x && !have.has(bare(x))))).slice(0,2);
+    return {t:"build", key:sl.key, ctx:sl.ctx, q:sl.build.q, w:words, d, alt:sl.build.alt||[], h:sl.h};
+  }
+  // dragon fire: true / false
+  const c = Math.random() < .5;
+  const s = c ? full : joinS(sl.pre, pick(sl.wrongs), sl.post);
+  return {t:"fire", key:sl.key, s:(sl.ctx?sl.ctx+" ":"")+s, c, f:(sl.ctx?sl.ctx+" ":"")+full, h:sl.h};
+}
+function buildSteps(L){
+  if (L.story) return storySteps();
+  const gens = L.mix ? LEVELS.filter(x=>!x.mix && !x.story).flatMap(x=>x.gens) : L.gens;
+  const used = new Set();
+  const make = kind => {
+    for (let k=0;k<400;k++) {
+      const sl = pick(gens)();
+      if (used.has(sl.key)) continue;
+      if (k<250 && S.seen.has(sl.key)) continue;      // prefer questions this student has never seen
+      const it = toKind(sl, k<300 ? kind : "choose");
+      if (!it) continue;
+      used.add(sl.key); return it;
+    }
+    return toKind(pick(gens)(), "choose");
+  };
+  const kinds = shuffle(["choose","choose","build","build","spot","spot"]);
+  const steps = PATTERN.map(x => x==="Q" ? make(kinds.shift()) : make("fire"));
+  return {steps, qids:[...used]};
+}
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => String(s).toLowerCase().replace(/[.,!?;:]/g,"").replace(/\s+/g," ").trim();
+const mult = st => st>=5 ? 2 : st>=3 ? 1.5 : 1;
+const starsFor = acc => acc>=90 ? 3 : acc>=70 ? 2 : acc>=40 ? 1 : 0;
+const starStr = n => "★".repeat(n)+"☆".repeat(3-n);
+let memDB = null;
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2800); }
+function foot(){ return `<div class="foot">Dragon Run · ${esc(CONFIG.CREDIT)}</div>`; }
+function showOverlay(html){ $("#overlayBox").innerHTML=html; $("#overlay").classList.remove("hidden"); }
+function hideOverlay(){ $("#overlay").classList.add("hidden"); }
+function requestFS(){ const el=document.documentElement; try { const f=el.requestFullscreen||el.webkitRequestFullscreen; if (f) { const p=f.call(el); if (p&&p.catch) p.catch(()=>{}); } } catch(e){} }
+function exitFS(){ try { if (document.fullscreenElement) document.exitFullscreen().catch(()=>{}); } catch(e){} }
+function tokenize(s){ return (s.match(/\[[^\]]+\]\S*|\S+/g)||[]).map(w => ({w:w.replace(/[\[\]]/g,""), bad:w.startsWith("[")})); }
+
+function computeProgress(rows){
+  const p = {};
+  rows.forEach(r => {
+    const c = p[r.caseId] || (p[r.caseId] = {attempts:0, done:false, won:false, bestPoints:0, bestAcc:0, practice:0, practiceBest:0});
+    if (Number(r.attempt) === 0) {                    // practice run: no try used, no grade
+      if (r.status !== "started") { c.practice++; c.practiceBest = Math.max(c.practiceBest, Number(r.points)||0); if (r.status==="completed") c.won = true; }
+      return;
+    }
+    c.attempts++;
+    if (r.status === "completed") c.won = true;
+    if (r.status !== "started") { c.done = true; c.bestPoints = Math.max(c.bestPoints, Number(r.points)||0); c.bestAcc = Math.max(c.bestAcc, r.total ? Math.round(r.correct/r.total*100) : 0); }
+  });
+  return p;
+}
+function leaderboardFrom(rows, cls){
+  const m = {};
+  rows.forEach(r => {
+    if ((cls && r.cls!==cls) || r.status==="started") return;
+    const k = r.cls+"|"+r.name, s = m[k] || (m[k] = {name:r.name, cls:r.cls, best:{}});
+    s.best[r.caseId] = Math.max(s.best[r.caseId]||0, Number(r.points)||0);
+  });
+  return Object.values(m).map(s => ({name:s.name, cls:s.cls, points:Object.values(s.best).reduce((a,b)=>a+b,0), cases:Object.keys(s.best).length}))
+    .sort((a,b) => b.points-a.points || b.cases-a.cases);
+}
+
+/* =====================================================================
+   API — Google Apps Script, or a local demo backend when API_URL is empty
+   ===================================================================== */
+const Mock = {
+  roster:[ {cls:"XI-1", name:"Demo Student A", pin:"1111"}, {cls:"XI-1", name:"Demo Student B", pin:"2222"}, {cls:"XI-2", name:"Demo Student C", pin:"3333"} ],
+  db(){ return store.get("dr_demo_db") || memDB || {attempts:[]}; },
+  save(d){ memDB=d; store.set("dr_demo_db", d); },
+  auth(d){ return this.roster.find(s => s.cls===d.cls && s.name===d.name && s.pin===String(d.pin||"").trim()); },
+  exec(action, d){
+    if (action.startsWith("race")) return MockRace.exec(action, d);
+    const db = this.db();
+    if (action==="roster") return {ok:true, students:this.roster.map(s=>({cls:s.cls, name:s.name}))};
+    if (action==="leaderboard") return {ok:true, rows:leaderboardFrom(db.attempts, d.cls).concat(SAMPLE_ROWS.filter(r=>!d.cls||r.cls===d.cls)).sort((a,b)=>b.points-a.points)};
+    if (!this.auth(d)) return {ok:false, error:"Wrong name or PIN."};
+    const mine = () => db.attempts.filter(r => r.cls===d.cls && r.name===d.name);
+    if (action==="login") return {ok:true, progress:computeProgress(mine()), seen:mine().flatMap(r => (r.qids||"").split(",").filter(Boolean))};
+    const caseId = Number(d.caseId);
+    if (action==="start") {
+      const prog = computeProgress(mine());
+      if (caseId>1 && !(prog[caseId-1] && prog[caseId-1].done)) return {ok:false, error:"This land is still locked."};
+      const used = mine().filter(r => r.caseId===caseId && r.attempt>0).length;
+      const n = d.practice ? 0 : used+1;
+      if (d.practice && used < CONFIG.MAX_ATTEMPTS) return {ok:false, error:"Use your graded tries first."};
+      if (!d.practice && used >= CONFIG.MAX_ATTEMPTS) return {ok:false, error:"No tries left for this land."};
+      db.attempts.push({cls:d.cls, name:d.name, caseId, attempt:n, status:"started", points:0, correct:0, total:0, speed:0, strikes:0});
+      this.save(db); return {ok:true, attempt:n};
+    }
+    if (action==="submit") {
+      const row = db.attempts.filter(r => r.cls===d.cls && r.name===d.name && r.caseId===caseId && r.attempt===Number(d.attempt) && r.status==="started").pop();
+      if (!row) return {ok:false, error:"Attempt not found or already submitted."};
+      Object.assign(row, {status:d.status, points:Number(d.points)||0, correct:Number(d.correct)||0, total:Number(d.total)||0, speed:Number(d.speed)||0, strikes:Number(d.strikes)||0, qids:d.qids||""});
+      this.save(db); return {ok:true, progress:computeProgress(mine())};
+    }
+    return {ok:false, error:"Unknown action"};
+  },
+  async call(a,d){ await new Promise(r=>setTimeout(r,150)); return this.exec(a,d); }
+};
+async function api(action, data={}){
+  if (!CONFIG.API_URL) return Mock.call(action, data);
+  const res = await fetch(CONFIG.API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action, ...data})});
+  if (!res.ok) throw new Error("Network error "+res.status);
+  return res.json();
+}
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const S = { auth:null, progress:{}, roster:null, run:null, tick:null, lbTimer:null, lbFilter:"", seen:new Set() };
+const totalPoints = () => Object.values(S.progress).reduce((s,c)=>s+(c.bestPoints||0),0);
+const landsDone = () => Object.values(S.progress).filter(c=>c.done).length;
+const rankName = p => { let r=RANKS[0][1]; RANKS.forEach(([min,n])=>{ if (p>=min) r=n; }); return r; };
+const isUnlocked = id => id===1 || !!(S.progress[id-1] && S.progress[id-1].done);
+const seenKey = () => "dr_seen_"+S.auth.cls+"|"+S.auth.name;
+function rememberSeen(ids){ ids.forEach(i=>S.seen.add(i)); store.set(seenKey(), [...S.seen].slice(-2000)); }
+function stopLB(){ clearInterval(S.lbTimer); S.lbTimer=null; }
+
+/* =====================================================================
+   LOGIN
+   ===================================================================== */
+async function renderLogin(msg){
+  stopLB();
+  app.innerHTML = `
+    <div class="hero" style="margin-top:18px">🐉💨🏃💰</div>
+    <div class="logo">Dragon Run</div>
+    <div class="sub">Escape the dragon. Win the treasure. Master the grammar.</div>
+    <div class="card">
+      ${!CONFIG.API_URL ? `<div class="hintbox" style="margin:0 0 4px">Demo mode — log in as <b>XI-1 · Demo Student A · PIN 1111</b>. Scores are saved only on this device.</div>` : ""}
+      <label for="cls">Class</label><select id="cls"><option>Loading…</option></select>
+      <label for="nm">Name</label><select id="nm"></select>
+      <label for="pin">PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="PIN from your teacher">
+      <div id="err" class="flash" style="color:#ff8f80">${msg?esc(msg):""}</div>
+      <button class="btn block" id="go">Start the adventure</button>
+    </div>
+    <p class="center small muted" style="margin-top:16px">📺 <a href="?board">Live leaderboard</a> · 🏁 <a href="?host">Teacher: start a class race</a></p>
+    ${foot()}`;
+  try {
+    if (!S.roster) { const out = await api("roster"); if (!out.ok) throw new Error(out.error); S.roster = out.students; }
+  } catch(e) { $("#err").textContent = "Cannot load the student list. Check your internet connection and reload."; return; }
+  const last = store.get("dr_last") || {};
+  const classes = [...new Set(S.roster.map(s=>s.cls))].sort();
+  const clsSel=$("#cls"), nmSel=$("#nm");
+  clsSel.innerHTML = `<option value="">— choose your class —</option>`+classes.map(c=>`<option ${c===last.cls?"selected":""}>${esc(c)}</option>`).join("");
+  const fill = () => { const names=S.roster.filter(s=>s.cls===clsSel.value).map(s=>s.name).sort();
+    nmSel.innerHTML = `<option value="">— choose your name —</option>`+names.map(n=>`<option ${n===last.name?"selected":""}>${esc(n)}</option>`).join(""); };
+  fill(); clsSel.onchange = fill;
+  $("#go").onclick = async () => {
+    const cls=clsSel.value, name=nmSel.value, pin=$("#pin").value.trim();
+    if (!cls||!name||!pin) { $("#err").textContent = "Choose your class and name, then type your PIN."; return; }
+    $("#go").disabled = true; $("#err").textContent = "";
+    try {
+      const out = await api("login", {cls, name, pin});
+      if (!out.ok) throw new Error(out.error);
+      S.auth = {cls, name, pin}; S.progress = out.progress || {};
+      S.seen = new Set([...(out.seen||[]), ...(store.get(seenKey())||[])]);
+      store.set("dr_last", {cls, name});
+      await flushPending();
+      if (!landsDone() && !store.get("dr_story_"+cls+"|"+name)) renderStory(); else renderMap();
+    } catch(e) { $("#err").textContent = e.message; $("#go").disabled = false; }
+  };
+  $("#pin").addEventListener("keydown", e => { if (e.key==="Enter") $("#go").click(); });
+}
+async function flushPending(){
+  const p = store.get("dr_pending");
+  if (!p || p.user !== S.auth.cls+"|"+S.auth.name) return;
+  try {
+    const out = await api("submit", {...S.auth, ...p.res});
+    if (out.ok) { S.progress = out.progress; store.set("dr_pending", null); toast("Your last run has been saved."); }
+    else if (/not found|already/i.test(out.error||"")) store.set("dr_pending", null);
+  } catch(e) {}
+}
+function renderStory(){
+  app.innerHTML = `<div class="hero" style="margin:20px 0 10px">🗺️</div>
+    <div class="parch"><h2 class="title">The Dragon's Map</h2><p style="line-height:1.65;margin-bottom:0">${esc(STORY)}</p></div>
+    <div class="card" style="margin-top:14px;line-height:1.7"><b>How to play</b><br>
+      🪵 Each land has 10 obstacles — grammar questions and dragon-fire attacks.<br>
+      🏃 Correct answers make you run faster. 🐉 Mistakes and slow answers let the dragon catch up.<br>
+      💰 Reach the treasure before the dragon catches you!<br>
+      🔁 The questions are different every time you play.</div>
+    <button class="btn block" id="ok" style="margin-top:14px">Open the map</button>`;
+  $("#ok").onclick = () => { store.set("dr_story_"+S.auth.cls+"|"+S.auth.name, 1); renderMap(); };
+}
+
+/* =====================================================================
+   MAP
+   ===================================================================== */
+function renderMap(){
+  stopLB();
+  const pts = totalPoints();
+  const cur = (LEVELS.find(L => isUnlocked(L.id) && !(S.progress[L.id]||{}).done)||{}).id;
+  app.innerHTML = `
+    <div class="topbar"><div><b>🧭 ${esc(S.auth.name)}</b> <span class="muted small">· ${esc(S.auth.cls)}</span></div><button class="btn ghost sm" id="logout">Log out</button></div>
+    <div class="card stats">
+      <div><b>${pts}</b><span class="small muted">points</span></div>
+      <div><b style="font-size:16px;line-height:1.7">${rankName(pts)}</b><span class="small muted">rank</span></div>
+      <div><b>${Object.values(S.progress).filter(c=>c.won).length}/${LEVELS.length}</b><span class="small muted">treasures</span></div>
+    </div>
+    <button class="btn block" id="raceBtn" style="margin-top:12px">🏁 Join the class race</button>
+    <div class="row" style="margin-top:10px"><button class="btn ghost" id="bag">🎒 Treasure Bag</button><button class="btn ghost" id="lb">🏆 Leaderboard</button></div>
+    <div class="map"><h3>🗺️ Map of Grammaria</h3><p class="center small" style="margin:0 0 16px;color:#7a6440">Each land takes about 3 minutes. Your best run counts.</p>
+      ${LEVELS.map(L => { const p=S.progress[L.id]||{attempts:0}, un=isUnlocked(L.id), left=CONFIG.MAX_ATTEMPTS-(p.attempts||0);
+        return `<button class="node ${un?"":"locked"} ${L.id===cur?"cur":""}" data-l="${L.id}">
+          ${p.won?`<span class="badge">${L.loot[0]} collected</span>`:""}
+          <span class="ic">${un?L.icon:"🔒"}</span>
+          <span><b>${L.id}. ${esc(L.name)}</b><span class="tp">${esc(L.topic)}</span><br>
+          <span class="st">${starStr(starsFor(p.bestAcc||0))}</span> <span class="small">${un ? (p.done?`Best ${p.bestPoints} · `:"")+(left>0 ? `${left} ${left===1?"try":"tries"} left` : `🔁 Practice${p.practice?` (${p.practice}×)`:""}`) : "Locked"}</span></span>
+        </button>`; }).join("")}
+    </div>
+    ${foot()}`;
+  $("#logout").onclick = () => { S.auth=null; S.progress={}; S.seen=new Set(); renderLogin(); };
+  $("#bag").onclick = renderBag; $("#lb").onclick = renderLeaderboard; $("#raceBtn").onclick = renderRaceLobby;
+  app.querySelectorAll(".node").forEach(b => b.onclick = () => {
+    const id = Number(b.dataset.l);
+    if (!isUnlocked(id)) return toast("Collect the treasure of the previous land first.");
+    openLevel(id, ((S.progress[id]||{}).attempts||0) >= CONFIG.MAX_ATTEMPTS);
+  });
+  const c = app.querySelector(".node.cur"); if (c && landsDone()>2) c.scrollIntoView({block:"center"});
+}
+function openLevel(id, practice){
+  const L = LEVELS.find(x=>x.id===id), used=(S.progress[id]||{}).attempts||0;
+  app.innerHTML = `
+    <div class="topbar"><button class="btn ghost sm" id="back">← Map</button><span class="pill ${practice?"gold":""}">${practice ? "🔁 Practice run" : `Try ${used+1} of ${CONFIG.MAX_ATTEMPTS}`}</span></div>
+    ${practice ? `<div class="hintbox" style="margin:0 0 12px">You have used your ${CONFIG.MAX_ATTEMPTS} graded tries. This is a <b>practice run</b>: play as often as you like with new questions. It does <b>not</b> change your grade, but good scores still show on the leaderboard.</div>` : ""}
+    <div class="parch"><div class="qtype">Land ${id} · ${esc(L.topic)}</div><h2 class="title">${L.icon} ${esc(L.name)}</h2><p style="line-height:1.6;margin-bottom:0">${esc(L.intro)}</p></div>
+    <div class="card" style="margin-top:14px">
+      <h3>Rules</h3>
+      <ul class="small" style="line-height:1.75;padding-left:18px;margin-top:0">
+        <li>🐉 The dragon starts <b>${CONFIG.START_GAP} m</b> behind you and never stops running. If it catches you, the run ends.</li>
+        <li>✅ Correct answer: you sprint ahead. ❌ Wrong answer: you trip and the dragon gets closer.</li>
+        <li>🔥 Dragon fire: decide fast whether the sentence is correct or wrong.</li>
+        <li>💡 Hints cost ${CONFIG.HINT_COST} points. 🔥 Correct answers in a row give ×1.5 and ×2 combos.</li>
+        <li>🚫 Stay on this page! Switching tabs or apps, or using split-screen, is a strike. Strike 2: −${CONFIG.STRIKE_PENALTY} points. Strike ${CONFIG.MAX_STRIKES}: your run ends automatically.</li>
+        <li>📌 ${practice ? "Practice runs are unlimited." : "Starting uses one graded try, even if you close the game in the middle. After your " + CONFIG.MAX_ATTEMPTS + " tries you can keep practicing."}</li>
+      </ul>
+      <button class="btn block" id="start">Run! 🏃</button>
+    </div>`;
+  $("#back").onclick = renderMap;
+  $("#start").onclick = async () => {
+    $("#start").disabled = true; requestFS();
+    try {
+      const out = await api("start", {...S.auth, caseId:id, practice:practice?1:0});
+      if (!out.ok) throw new Error(out.error);
+      if (!practice) S.progress[id] = Object.assign({attempts:0, done:false, bestPoints:0, bestAcc:0}, S.progress[id]||{}, {attempts:out.attempt});
+      beginRun(L, out.attempt);
+      S.run.practice = !!practice;
+    } catch(e) { exitFS(); toast(e.message); $("#start").disabled = false; }
+  };
+}
+
+/* =====================================================================
+   RUN — the whole screen is the land's map
+   ===================================================================== */
+const MAPCOL = {1:["#b5dca0","#6fae5f"],2:["#f3d9a6","#cf9a5c"],3:["#bfe3d3","#6fae9a"],4:["#6b638f","#2f2a4a"],5:["#f2dca0","#c7955a"],
+                6:["#dfe8ec","#94a7b0"],7:["#8a3424","#2a0e09"],8:["#8cbdd1","#3a6a80"],9:["#4a2b6b","#150a24"]};
+const MW = 400, MH = 1600, U = 2.6;            // map units; U = map units per metre of dragon distance
+const seeded = n => { let x = n*9301+49297; return () => (x = (x*9301+49297) % 233280) / 233280; };
+const emojiList = s => { try { return [...new Intl.Segmenter().segment(s)].map(x=>x.segment).filter(x=>x.trim()); } catch(e) { return Array.from(s).filter(x=>x.trim() && x!=="️"); } };
+
+function mapSVG(L){
+  const R = seeded(L.id*7+3), col = MAPCOL[L.id] || ["#cde","#9ab"], N = 9, pts = [], samples = [];
+  for (let k=0;k<=N;k++) pts.push([k===0 ? 200 : k%2 ? 90+R()*55 : 255+R()*55, MH-90 - k*(MH-190)/N]);
+  const bz = (a,b,c,d,t) => { const u=1-t; return [u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0], u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]]; };
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i=0;i<pts.length-1;i++) {
+    const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
+    const c1=[p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6], c2=[p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6];
+    d += ` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0]},${p2[1]}`;
+    for (let t=0;t<=1;t+=.1) samples.push(bz(p1,c1,c2,p2,t));
+  }
+  const deco = emojiList(L.deco), far = emojiList(L.far);
+  let blobs = "", items = "";
+  for (let k=0;k<26;k++) blobs += `<circle cx="${(R()*MW).toFixed(0)}" cy="${(R()*MH).toFixed(0)}" r="${(30+R()*60).toFixed(0)}" fill="${col[1]}" opacity=".22"/>`;
+  for (let y=40;y<MH-20;y+=56) for (let x=24;x<MW;x+=58) {
+    const px=x+(R()-.5)*30, py=y+(R()-.5)*30;
+    if (samples.some(([sx,sy]) => Math.hypot(sx-px, sy-py) < 50)) continue;
+    if (R() < .18) continue;
+    const e = R() < .15 && far.length ? far[Math.floor(R()*far.length)] : deco[Math.floor(R()*deco.length)];
+    items += `<text x="${px.toFixed(0)}" y="${py.toFixed(0)}" font-size="${(24+R()*16).toFixed(0)}" text-anchor="middle">${e}</text>`;
+  }
+  return `<svg viewBox="0 0 ${MW} ${MH}" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col[1]}"/><stop offset="1" stop-color="${col[0]}"/></linearGradient>
+      <radialGradient id="tg"><stop offset="0" stop-color="#ffe9a3"/><stop offset="1" stop-color="#ffe9a300"/></radialGradient></defs>
+    <rect width="${MW}" height="${MH}" fill="url(#mg)"/>${blobs}
+    <path d="${d}" stroke="#0000002e" stroke-width="32" fill="none" stroke-linecap="round"/>
+    <path id="trail" d="${d}" stroke="#f4e3b5" stroke-width="22" fill="none" stroke-linecap="round"/>
+    <path d="${d}" stroke="#a07a3c" stroke-width="2" stroke-dasharray="6 9" fill="none"/>
+    ${items}<g id="marks"></g></svg>`;
+}
+const P = s => { const r=S.run, p=r.trail.getPointAtLength(Math.max(0, Math.min(r.Ls, s))); return {x:p.x, y:p.y}; };
+const stepS = k => S.run.Ls * (0.05 + 0.87*k/10);
+
+function beginRun(L, attempt){
+  const {steps, qids} = buildSteps(L);
+  rememberSeen(qids);
+  S.run = { L, caseId:L.id, attempt, steps, qids, i:0, points:0, correct:0, streak:0, bonusSum:0, strikes:0, log:[], results:[],
+            gap:CONFIG.START_GAP, answered:true, last:Date.now(), startedAt:Date.now(), finished:false, nextBreath:Date.now()+2500 };
+  renderStage();
+  armAntiCheat();
+  clearInterval(S.tick);
+  S.tick = setInterval(tick, 200);
+  renderStep();
+}
+function renderStage(){
+  const r = S.run, L = r.L, col = MAPCOL[L.id] || ["#cde","#9ab"];
+  document.body.classList.add("running");
+  app.innerHTML = `<div class="stage" id="stage" style="background:linear-gradient(${col[1]},${col[0]})">
+    <div class="world" id="world">${mapSVG(L)}<div id="ghosts"></div>
+      <div class="tok dragon" id="drg"><span class="in">🐉</span></div>
+      <div class="tok runner" id="run"><span class="in">🏃</span><span class="bubble" id="bubble"></span></div>
+    </div>
+    <div class="dangerv"></div>
+    <div class="hud2">${r.race ? `
+      <div class="r1"><span class="pill gold">⭐ <span id="pts">0</span></span><span class="pill gold big2">⏱ <span id="rtime"></span></span>
+        <span class="pill">🏅 <span id="rrank"></span></span><span class="pill" id="strk">🚫 0/${CONFIG.MAX_STRIKES}</span></div>
+      <div class="meter"><span id="rdist"></span><span id="rdrag" style="margin-left:auto"></span><span class="pill gold" id="combo" style="visibility:hidden">🔥 ×1</span></div>
+      <div class="rtop" id="rtop"></div>` : `
+      <div class="r1"><span class="pill gold">⭐ <span id="pts">0</span></span><span class="pill land">${L.icon} ${esc(L.name)}</span>
+        <span class="pill gold" id="combo" style="visibility:hidden">🔥 ×1</span><span class="pill" id="strk">🚫 0/${CONFIG.MAX_STRIKES}</span></div>
+      <div class="meter"><span>🐉</span><div class="gap"><i id="gapBar"></i></div><b id="gapNum"></b><span id="stepNum"></span></div>`}
+    </div>
+    <div class="cd" id="cd" style="display:none"></div>
+    <div class="dtag" id="dtag"></div>
+    <div class="sheet no-select" id="sheet"></div>
+  </div>`;
+  r.trail = $("#trail"); r.Ls = r.trail.getTotalLength();
+  let m = "";
+  if (!r.race) for (let k=0;k<10;k++) { const p=P(stepS(k)); m += `<circle id="mk${k}" cx="${p.x}" cy="${p.y}" r="9" fill="#fff8e6" stroke="#7a5a25" stroke-width="2"/><text x="${p.x}" y="${p.y+4}" font-size="10" font-weight="700" text-anchor="middle" fill="#5a3d10">${k+1}</text>`; }
+  const s0=P(0), t=P(r.Ls*0.985);
+  m += `<text x="${s0.x}" y="${s0.y+10}" font-size="30" text-anchor="middle">🏁</text>
+        <circle cx="${t.x}" cy="${t.y-12}" r="46" fill="url(#tg)"/><text x="${t.x}" y="${t.y}" font-size="44" text-anchor="middle">${L.final?"👑":"💰"}</text>`;
+  $("#marks").innerHTML = m;
+  if (r.race) { r.rS = raceS(0); r.dS = 0; } else { r.rS = r.rT = stepS(0); r.dS = Math.max(0, r.rS - r.gap*U); }
+  r.cam = null;
+  cancelAnimationFrame(r.raf); r.raf = requestAnimationFrame(r.race ? frameRace : frame);
+}
+function placeTok(el, p, sc, fx){ el.style.transform = `translate(${p.x*sc}px,${p.y*sc}px)`; el.style.setProperty("--fx", fx); }
+function frame(now){
+  const r = S.run, stage = $("#stage"); if (!r || !stage || r.finished) return;
+  const W = stage.clientWidth, H = stage.clientHeight, sc = W/MW, world = $("#world");
+  world.style.width = W+"px"; world.style.height = MH*sc+"px";
+  const dt = Math.min(.05, (now-(r.lf||now))/1000); r.lf = now;
+  if (!r.answered && !r.ending) {                            // keep running slowly toward the next obstacle while thinking
+    const a = stepS(r.i), b = stepS(r.i+1), think = (Date.now()-r.qStart)/1000;
+    r.rT = Math.max(r.rT, a + (b-a)*Math.min(.65, think/28));
+  }
+  r.rS += Math.sign(r.rT-r.rS) * Math.min(Math.abs(r.rT-r.rS), (Math.abs(r.rT-r.rS) > 30 ? 330 : 60)*dt);
+  const dT = Math.max(0, r.rS - Math.max(0, r.gap)*U);
+  r.dS += (dT - r.dS) * Math.min(1, dt*3);
+  const rp=P(r.rS), dp=P(r.dS), ra=P(r.rS+6), da=P(r.dS+6);
+  placeTok($("#run"), rp, sc, ra.x >= rp.x ? -1 : 1);       // emoji faces left → flip when moving right
+  placeTok($("#drg"), dp, sc, da.x >= dp.x ? -1 : 1);
+  const target = rp.y*sc - H*0.27;
+  r.cam = r.cam==null ? target : r.cam + (target - r.cam)*Math.min(1, dt*4);
+  world.style.transform = `translateY(${-r.cam}px)`;
+  if (stage.scrollTop || stage.scrollLeft) { stage.scrollTop = 0; stage.scrollLeft = 0; }
+  const g = Math.max(0, r.gap);
+  $("#gapBar").style.width = g+"%";
+  $("#gapNum").textContent = Math.ceil(g)+" m";
+  $("#stepNum").textContent = `· ${Math.min(r.i+1, 10)}/10`;
+  stage.classList.toggle("close", g < 15);
+  // dragon hidden under the question panel → show a marker
+  const sheetTop = $("#sheet").getBoundingClientRect().top - stage.getBoundingClientRect().top, dy = dp.y*sc - r.cam, tag = $("#dtag");
+  if (dy > sheetTop - 10) { tag.style.display = "block"; tag.style.left = Math.max(60, Math.min(W-60, dp.x*sc))+"px"; tag.style.top = (sheetTop - 6)+"px"; tag.textContent = `🐉 ↓ ${Math.ceil(g)} m`; }
+  else tag.style.display = "none";
+  r.raf = requestAnimationFrame(frame);
+}
+function breathe(big){
+  const r = S.run, world = $("#world"), stage = $("#stage"); if (!r || !world || !stage) return;
+  const sc = stage.clientWidth/MW, rp = P(r.rS), dp = P(r.dS);
+  const ax = dp.x*sc, ay = dp.y*sc - 30, bx = rp.x*sc, by = rp.y*sc - 20;
+  let dx = bx-ax, dy = by-ay; const dist = Math.hypot(dx,dy) || 1; dx/=dist; dy/=dist;
+  const reach = big ? dist+40 : Math.min(dist+10, 150);
+  const mx = ax+dx*26, my = ay+dy*26;
+  for (let i=0;i<(big?18:11);i++) {
+    const f = document.createElement("span"); f.className = "flame"; f.textContent = "🔥"; world.appendChild(f);
+    const len = reach*(.5+.5*Math.random()), j = (Math.random()-.5)*(big?50:34);
+    const ex = mx+dx*len-dy*j, ey = my+dy*len+dx*j;
+    f.animate([{transform:`translate(${mx}px,${my}px) translate(-50%,-50%) scale(.3)`, opacity:1},
+               {transform:`translate(${ex}px,${ey}px) translate(-50%,-50%) scale(${1.1+Math.random()*.9})`, opacity:0}],
+              {duration:600+Math.random()*300, delay:i*35, easing:"ease-out", fill:"backwards"}).onfinish = () => f.remove();
+  }
+  if (Math.random() < .35 || big) {
+    const t = document.createElement("span"); t.className = "roar"; t.textContent = pick(["ROAR!","GRRR!","ROOAAR!"]); world.appendChild(t);
+    t.animate([{transform:`translate(${ax}px,${ay-30}px) translate(-50%,-50%) scale(.6)`, opacity:0},{transform:`translate(${ax}px,${ay-50}px) translate(-50%,-50%) scale(1.15)`, opacity:1, offset:.3},
+               {transform:`translate(${ax}px,${ay-70}px) translate(-50%,-50%) scale(1)`, opacity:0}], {duration:1100}).onfinish = () => t.remove();
+  }
+  scare(reach >= dist-25);
+}
+function scare(hit, face){
+  const b = $("#bubble"), run = $("#run"), stage = $("#stage"); if (!b) return;
+  b.textContent = face || (hit ? "🥵" : pick(["😱","😨","😰"]));
+  b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+  run.classList.remove("shake"); void run.offsetWidth; run.classList.add("shake");
+  if (hit) { stage.classList.add("heat"); setTimeout(() => stage && stage.classList.remove("heat"), 450); }
+}
+function setMark(k, cls){ const c = $("#mk"+k); if (c) c.setAttribute("fill", {ok:"#3fae78", bad:"#e05a47", cur:"#f2b84b"}[cls] || "#fff8e6"); }
+
+function tick(){
+  const r = S.run; if (!r || r.finished || r.ending) return;
+  const now = Date.now(), dt = (now-r.last)/1000; r.last = now;
+  r.gap -= r.L.speed * dt * (r.answered ? 0.4 : 1);           // the dragon never stops (a bit slower while you read)
+  if (r.gap <= 0) { r.gap = 0; caught(); return; }
+  if (now >= r.nextBreath) { breathe(false); r.nextBreath = now + (r.gap < 15 ? 1800 : 2800) + Math.random()*2200; }
+  const st = r.steps[r.i];
+  if (st && st.t==="fire" && !r.answered) {
+    const left = r.fireEnd - now, b = $("#cbar");
+    if (b) b.style.width = Math.max(0, left/(r.L.fire*10))+"%";
+    if (left <= 0) judge(null);
+  }
+}
+function moveGap(d){ const r=S.run; r.gap = Math.max(0, Math.min(100, r.gap+d)); }
+
+function refreshHUD(){
+  const r=S.run; if (!r) return;
+  const p=$("#pts"); if (p) p.textContent=r.points;
+  const s=$("#strk"); if (s) { s.textContent=`🚫 ${r.strikes}/${CONFIG.MAX_STRIKES}`; s.classList.toggle("red", r.strikes>0); }
+  const c=$("#combo"); if (c) { const m=mult(r.streak); c.textContent=`🔥 ×${m}`; c.style.visibility = m>1?"visible":"hidden"; }
+}
+const LABEL = {choose:["🪵 Broken bridge","Choose the right plank to cross"], build:["🗿 Rune gate","Put the stones in the right order"], spot:["💀 Cursed sign","One part is cursed — tap the mistake"]};
+
+function renderStep(){
+  const r = S.run, st = r.steps[r.i];
+  r.qStart = Date.now(); r.hintUsed = false; r.answered = false;
+  if (!r.race) { r.rT = Math.max(r.rT||0, stepS(r.i)); setMark(r.i, "cur"); }
+  if (st.t==="fire") return renderFire(st);
+  const [title, sub] = LABEL[st.t];
+  let body = "";
+  if (st.t==="choose") {
+    r.opts = shuffle(st.o.map((t,i)=>({t, ok:i===st.a})));
+    body = `<div class="qtext">${esc(st.q).replace("___",'<span class="blank">&nbsp;</span>')}</div>
+      <div class="opts">${r.opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o.t)}</button>`).join("")}</div>`;
+  } else if (st.t==="build") {
+    r.tiles = shuffle(st.w.concat(st.d).map((t,i)=>({t, id:i}))); r.picked = [];
+    body = `<div class="qtext" style="font-size:17px">${esc(st.q)}</div><div class="slot" id="slot"></div><div class="tiles" id="tiles"></div>
+      <button class="btn block" id="check" disabled>Check</button>`;
+  } else {
+    r.tokens = tokenize(st.s);
+    body = `<div class="sentence" style="margin-top:8px">${r.tokens.map((tk,i)=>`<button class="word" data-i="${i}">${esc(tk.w)}</button>`).join("")}</div>`;
+  }
+  const sh = $("#sheet");
+  sh.innerHTML = `<div class="qtype">${title} · ${sub}</div>
+      ${st.ctx?`<div class="ctx">${st.ctxLabel||"🔎 Clue:"} ${esc(st.ctx)}</div>`:""}${body}<div id="hint"></div>
+    <div id="fb"></div>
+    <button class="btn ghost block" id="hintBtn" style="margin-top:12px">💡 Hint (−${CONFIG.HINT_COST} points)</button>`;
+  sh.scrollTop = 0;
+  $("#hintBtn").onclick = () => {
+    if (r.hintUsed || r.answered) return;
+    r.hintUsed = true; r.points = Math.max(0, r.points-CONFIG.HINT_COST); refreshHUD();
+    $("#hint").innerHTML = `<div class="hintbox">💡 ${esc(st.h)}</div>`; $("#hintBtn").disabled = true;
+  };
+  if (st.t==="choose") {
+    app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      if (r.answered) return;
+      const o = r.opts[Number(b.dataset.i)];
+      app.querySelectorAll(".opt").forEach((x,i)=>{ if (r.opts[i].ok) x.classList.add("right"); });
+      if (!o.ok) b.classList.add("wrong");
+      answer(o.ok, o.ok ? "" : `The answer is <b>${esc(st.o[st.a])}</b>.`);
+    });
+  } else if (st.t==="build") {
+    const draw = () => {
+      $("#slot").innerHTML = r.picked.length ? r.picked.map(id=>`<button class="tile" data-back="${id}">${esc(r.tiles.find(x=>x.id===id).t)}</button>`).join("")
+        : `<span class="small" style="color:#9a8458;padding:8px">Tap the stones below in the right order…</span>`;
+      $("#tiles").innerHTML = r.tiles.map(t=>`<button class="tile ${r.picked.includes(t.id)?"used":""}" data-add="${t.id}">${esc(t.t)}</button>`).join("");
+      $("#check").disabled = !r.picked.length;
+    };
+    draw();
+    $("#tiles").onclick = e => { const b=e.target.closest("[data-add]"); if (!b||r.answered) return; const id=Number(b.dataset.add); if (!r.picked.includes(id)) { r.picked.push(id); draw(); } };
+    $("#slot").onclick = e => { const b=e.target.closest("[data-back]"); if (!b||r.answered) return; r.picked=r.picked.filter(x=>x!==Number(b.dataset.back)); draw(); };
+    $("#check").onclick = () => {
+      if (r.answered) return;
+      const sent = r.picked.map(id=>r.tiles.find(x=>x.id===id).t).join(" ");
+      const ok = [st.w.join(" "), ...st.alt].some(a => norm(a)===norm(sent));
+      $("#check").disabled = true;
+      answer(ok, ok ? `“${esc(sent)}.”` : `Your sentence: “${esc(sent)}”<br>Correct: <b>“${esc(st.w.join(" "))}.”</b>`);
+    };
+  } else {
+    app.querySelectorAll(".word").forEach(b => b.onclick = () => {
+      if (r.answered) return;
+      const i = Number(b.dataset.i), ok = r.tokens[i].bad;
+      app.querySelectorAll(".word").forEach((x,j)=>{ if (r.tokens[j].bad) x.classList.add("right"); });
+      if (!ok) b.classList.add("wrong");
+      answer(ok, `Mistake: “${esc(r.tokens.find(t=>t.bad).w)}” → Correct: <b>${esc(st.f)}</b>`);
+    });
+  }
+}
+function answer(ok, detail){
+  const r=S.run; if (r.answered||r.finished||r.ending) return;
+  r.answered = true;
+  const st = r.steps[r.i], t=(Date.now()-r.qStart)/1000;
+  let gained = 0;
+  if (ok) {
+    r.streak++; r.correct++;
+    const bonus = Math.round(50*Math.max(0, 1-t/25)); r.bonusSum += bonus;
+    gained = Math.round((100+bonus)*mult(r.streak)); r.points += gained; r.results.push("ok");
+    if (r.race) r.boost += r.T*0.05; else moveGap(12);
+    scare(false, pick(["😄","💪","😎"]));
+  } else {
+    r.streak = 0; r.results.push("bad"); scare(false, "😖");
+    if (r.race) r.stunUntil = Math.max(r.stunUntil, Date.now()+1800); else moveGap(-10);
+  }
+  if (!r.race) { setMark(r.i, ok?"ok":"bad"); r.rT = stepS(r.i+1); }
+  refreshHUD();
+  $("#hintBtn").style.display = "none";
+  $("#fb").innerHTML = `<div class="feedback ${ok?"ok":"no"}">
+      <b>${ok ? `✅ Correct! +${gained}${mult(r.streak)>1?` (combo ×${mult(r.streak)})`:""} · You sprint ahead!` : "❌ You tripped! The dragon gets closer."}</b>
+      ${detail?`<div style="margin-top:6px">${detail}</div>`:""}
+      <div class="small" style="margin-top:8px;opacity:.85">📘 ${esc(st.h)}</div>
+    </div>
+    <button class="btn block" id="next" style="margin-top:12px">${r.race ? "Next →" : r.i+1>=r.steps.length ? "Grab the treasure! 💰" : "Keep running →"}</button>
+    <p class="small muted center" style="margin:6px 0 0">${r.race ? (ok ? "🏃 Sprinting!" : "😖 You tripped — the next question comes automatically.") : "🐉 The dragon is still coming — keep going!"}</p>`;
+  if (r.race) { const at = r.i; setTimeout(() => { if (S.run===r && r.i===at && !r.finished) nextStep(); }, ok ? 1300 : 3500); }
+  const sh = $("#sheet"); sh.scrollTo({top:sh.scrollHeight, behavior:"smooth"});
+  $("#next").onclick = () => nextStep();
+}
+function nextStep(){
+  const r=S.run; if (r.finished||r.ending) return;
+  if (r.race) { if (r.fin) return; r.i++; if (r.i >= r.steps.length-2) raceMore(r); renderStep(); return; }
+  r.i++; if (r.i < r.steps.length) renderStep(); else treasure();
+}
+
+function renderFire(st){
+  const r = S.run; r.fireEnd = Date.now() + r.L.fire*1000;
+  $("#sheet").innerHTML = `<div class="center">
+      <h2 class="title" style="color:#c2410c;margin:0">🔥 Dragon fire!</h2>
+      <p class="small muted" style="margin:4px 0 10px">Is this sentence grammatically correct? Decide fast to dodge!</p>
+      <div class="stmt">${esc(st.s)}</div>
+      <div class="bar"><i id="cbar"></i></div>
+      <div class="judge"><button class="btn green" data-j="1">✓ Correct</button><button class="btn red" data-j="0">✗ Wrong</button></div>
+      <div class="flash" id="cflash"></div>
+    </div>`;
+  $("#sheet").scrollTop = 0;
+  breathe(!r.race); r.nextBreath = Date.now() + 3500;
+  app.querySelectorAll("[data-j]").forEach(b => b.onclick = () => judge(b.dataset.j==="1"));
+}
+function judge(v){
+  const r=S.run; if (r.answered||r.finished||r.ending) return;
+  r.answered = true;
+  const st = r.steps[r.i], ok = v===st.c; let g=0;
+  if (ok) { r.streak++; r.correct++; g=Math.round(50*mult(r.streak)); r.points+=g; r.results.push("ok"); if (r.race) r.boost += r.T*0.025; else moveGap(6); scare(false, "😅"); }
+  else { r.streak=0; r.results.push("bad"); if (r.race) r.stunUntil = Math.max(r.stunUntil, Date.now()+1500); else moveGap(-8); scare(true); }
+  if (!r.race) { setMark(r.i, ok?"ok":"bad"); r.rT = stepS(r.i+1); }
+  refreshHUD();
+  app.querySelectorAll("[data-j]").forEach(b=>b.disabled=true);
+  $("#cflash").innerHTML = ok ? `<span style="color:#1f7a4d">✅ Dodged! +${g}</span>`
+    : `<span style="color:#b42318">${v===null?"⏰ Too slow — burned! ":"🔥 Burned! "}${st.c ? "That sentence was correct." : "Correct: "+esc(st.f)}</span>`;
+  const at = r.i; setTimeout(() => { if (S.run===r && r.i===at) nextStep(); }, ok ? 900 : 2800);
+}
+
+/* =====================================================================
+   LIVE CLASS RACE — everyone in class races on the same map at the same time
+   ===================================================================== */
+const BOT_NAMES = ["Aisyah","Rafi","Fikri","Nadia","Budi","Salsa","Dimas","Putri","Arya","Zahra","Ilham","Nabila"];
+const dragonPos = (t, m) => { const f = Math.max(0, t)/m.duration; return m.track*(-0.06 + 0.55*f + 0.25*f*f); };
+const raceBase = m => 0.35*m.track/m.duration;          // jogging speed (m/s) — everyone keeps moving slowly
+const sortStand = list => list.slice().sort((a,b) => (b.fin-a.fin) || (a.fin ? a.ft-b.ft : 0) || (b.p-a.p));
+const meKey = () => S.auth ? S.auth.cls+"|"+S.auth.name : "";
+const fmtT = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
+
+function botState(i, m, nowMs){                          // demo robots: deterministic, so every tab sees the same race
+  const R = seeded(m.seed + i*17), skill = .45 + R()*.5, every = Math.round(12 + R()*16), base = raceBase(m), T = m.track;
+  const t = m.startAt ? Math.min(m.duration, Math.max(0, (nowMs - m.startAt)/1000)) : 0;
+  let p=0, pts=0, b=0, fin=0, ft=0, cor=0, tot=0;
+  for (let s=1; s<=t; s++) {
+    p += base;
+    if (s % every === 0) { tot++; if (R() < skill) { cor++; p += .05*T; pts += 110 + Math.round(R()*60); } }
+    const D = dragonPos(s, m); if (p <= D) { p = D + .03*T; b++; pts = Math.max(0, pts-50); }
+    if (p >= T) { fin=1; ft=s; p=T; pts += 300; break; }
+  }
+  return {cls:m.cls==="ALL" ? "XI-1" : m.cls, name:"🤖 "+BOT_NAMES[i], p, pts, fin, ft, cor, tot, b, str:0, t:nowMs};
+}
+const MockRace = {
+  get(){ return store.get("dr_demo_race") || memRace.m; }, set(m){ memRace.m = m; store.set("dr_demo_race", m); },
+  ps(){ return store.get("dr_demo_race_ps") || memRace.ps || {}; }, setPs(p){ memRace.ps = p; store.set("dr_demo_race_ps", p); },
+  players(m){ const now = Date.now(); return BOT_NAMES.slice(0, m.bots||0).map((_,i)=>botState(i,m,now)).concat(Object.values(this.ps())); },
+  exec(a, d){
+    const now = Date.now(); let m = this.get();
+    const teacherOk = () => String(d.tpin||"") === "1234";
+    if (a==="raceCreate") {
+      if (!teacherOk()) return {ok:false, error:"Wrong teacher PIN (demo PIN: 1234)."};
+      m = {id:"demo"+now.toString(36), cls:d.cls||"ALL", land:Number(d.land)||1, duration:Number(d.duration)||300, track:CONFIG.RACE_TRACK, state:"lobby", startAt:0, seed:now%9973, bots:12};
+      this.set(m); this.setPs({}); return {ok:true, race:m, now};
+    }
+    if (a==="raceState") { const ok = m && (m.cls==="ALL" || !d.cls || m.cls===d.cls); return {ok:true, race:ok?m:null, players:ok?this.players(m):[], now}; }
+    if (!m) return {ok:false, error:"There is no race."};
+    if (a==="raceStart") { if (!teacherOk()) return {ok:false, error:"Wrong teacher PIN."}; m.state="running"; m.startAt=now+6000; this.set(m); return {ok:true, race:m, now}; }
+    if (a==="raceEnd") { if (!teacherOk()) return {ok:false, error:"Wrong teacher PIN."}; m.state="ended"; this.set(m); return {ok:true, race:m, players:sortStand(this.players(m)), now}; }
+    if (a==="raceJoin" || a==="raceUpdate") {
+      if (!Mock.auth(d)) return {ok:false, error:"Wrong name or PIN."};
+      const ps = this.ps(), k = d.cls+"|"+d.name;
+      ps[k] = Object.assign(ps[k] || {cls:d.cls, name:d.name, p:0, pts:0, fin:0, ft:0, cor:0, tot:0, b:0, str:0},
+        a==="raceUpdate" ? {p:+d.p, pts:+d.pts, fin:+d.fin, ft:+d.ft, cor:+d.cor, tot:+d.tot, b:+d.b, str:+d.str} : {}, {t:now});
+      this.setPs(ps); return {ok:true, race:m, players:this.players(m), now};
+    }
+    return {ok:false, error:"Unknown action"};
+  }
+};
+const memRace = {m:null, ps:null};
+
+/* ---------- student: lobby ---------- */
+function renderRaceLobby(){
+  stopLB(); clearInterval(S.racePoll);
+  app.innerHTML = `
+    <div class="topbar"><button class="btn ghost sm" id="back">← Map</button><span class="pill gold">🏁 Class race</span></div>
+    <div class="hero" style="margin:14px 0 6px">🏃🏃‍♀️🏃🐉</div>
+    <div class="parch center" id="lobby"><div class="spinner"></div></div>
+    ${!CONFIG.API_URL ? `<div class="card small" style="margin-top:14px">Demo mode: no teacher screen? <button class="btn block" id="demoRace" style="margin-top:10px">Start a demo race with 12 robot runners 🤖</button></div>` : ""}
+    ${foot()}`;
+  $("#back").onclick = () => { clearInterval(S.racePoll); renderMap(); };
+  if ($("#demoRace")) $("#demoRace").onclick = () => {
+    const land = Math.max(1, ...LEVELS.filter(L => !L.story && isUnlocked(L.id)).map(L=>L.id));
+    MockRace.exec("raceCreate", {tpin:"1234", cls:S.auth.cls, land, duration:180});
+    MockRace.exec("raceStart", {tpin:"1234"});
+  };
+  let joinedId = null;
+  const poll = async () => {
+    try {
+      const t0 = Date.now(), out = await api("raceState", {cls:S.auth.cls}), t1 = Date.now();
+      if (!out.ok) throw new Error(out.error);
+      const m = out.race, box = $("#lobby"); if (!box) return;
+      if (!m || m.state==="ended") { box.innerHTML = `<h2 class="title">No race yet</h2><p>When your teacher opens a race, you will join it here automatically. Keep this page open.</p><div class="spinner"></div>`; return; }
+      if (joinedId !== m.id) { const j = await api("raceJoin", {...S.auth, raceId:m.id}); if (!j.ok) throw new Error(j.error); joinedId = m.id; }
+      const L = LEVELS.find(x=>x.id===m.land) || LEVELS[0];
+      if (m.state==="running") { clearInterval(S.racePoll); requestFS(); startRace(m, out.now - (t0+t1)/2, out.players); return; }
+      box.innerHTML = `<h2 class="title">You're in! 🎉</h2><p style="margin:0">${L.icon} <b>${esc(L.name)}</b> · ${esc(L.topic)} · ${fmtT(m.duration)} min</p>
+        <p class="small">Waiting for your teacher to start… <b>${out.players.length}</b> runners ready</p>
+        <div class="chips">${out.players.map(p=>`<span class="chip ${p.cls+"|"+p.name===meKey()?"me":""}">${esc(p.name)}</span>`).join("")}</div>`;
+    } catch(e) { const box=$("#lobby"); if (box) box.innerHTML = `<p>Connection problem — retrying…</p><div class="spinner"></div>`; }
+  };
+  poll(); S.racePoll = setInterval(poll, 2000);
+}
+
+/* ---------- student: the race ---------- */
+function landGens(L){ return (L.mix || L.story) ? LEVELS.filter(x=>!x.mix && !x.story).flatMap(x=>x.gens) : L.gens; }
+function makeQ(gens, kind, used){
+  for (let k=0;k<400;k++) {
+    const sl = pick(gens)();
+    if (used.has(sl.key)) continue;
+    if (k<250 && S.seen.has(sl.key)) continue;
+    const it = toKind(sl, k<300 ? kind : "choose"); if (!it) continue;
+    used.add(sl.key); return it;
+  }
+  return toKind(pick(gens)(), "choose");
+}
+function raceMore(r){ ["Q","Q","F","Q","Q","F"].forEach(x => r.steps.push(makeQ(r.gens, x==="F" ? "fire" : pick(["choose","choose","build","spot"]), r.used))); }
+const raceS = p => S.run.Ls*(0.03 + 0.94*Math.min(p, S.run.T)/S.run.T);
+
+function startRace(meta, offset, players){
+  const L = LEVELS.find(x=>x.id===meta.land) || LEVELS[0];
+  S.run = { race:true, meta, L, T:meta.track, base:raceBase(meta), offset, gens:landGens(L), used:new Set(), steps:[], i:0,
+            points:0, correct:0, streak:0, bonusSum:0, strikes:0, log:[], results:[], pos:0, boost:0, stunUntil:0, fin:0, ft:0, burns:0,
+            others:(players||[]).filter(p => p.cls+"|"+p.name !== meKey()), answered:true, last:Date.now(), startedAt:Date.now(), finished:false,
+            nextBreath:Date.now()+4000, lastPush:0, started:false, gap:100 };
+  raceMore(S.run);
+  renderStage();
+  $("#sheet").innerHTML = `<div class="center"><h2 class="title" style="margin:4px 0">Get ready!</h2><p class="small muted">Answer correctly to sprint. The dragon chases everyone!</p></div>`;
+  armAntiCheat();
+  clearInterval(S.tick); S.tick = setInterval(raceTick, 150);
+}
+function raceNow(){ return Date.now() + S.run.offset; }
+function raceTick(){
+  const r = S.run; if (!r || !r.race || r.finished) return;
+  const el = (raceNow() - r.meta.startAt)/1000, now = Date.now(), dt = Math.min(.5, (now - r.last)/1000); r.last = now;
+  const cd = $("#cd");
+  if (el < 0) { if (cd) { cd.style.display = "flex"; cd.textContent = Math.ceil(-el) <= 3 ? Math.ceil(-el) : "Ready…"; } return; }
+  if (!r.started) { r.started = true; r.startedAt = now; if (cd) { cd.textContent = "GO!"; setTimeout(() => { const c=$("#cd"); if (c) c.style.display="none"; }, 700); } renderStep(); }
+  if (el >= r.meta.duration) { raceOver("time"); return; }
+  const D = dragonPos(el, r.meta);
+  if (!r.fin) {
+    if (now >= r.stunUntil) {
+      r.pos += r.base*dt;
+      const add = Math.min(r.boost, r.T*0.06*dt); r.pos += add; r.boost -= add;
+      if (r.pos <= D) {                                    // the dragon caught up
+        r.burns++; r.points = Math.max(0, r.points-50); r.pos = D + 0.03*r.T; r.stunUntil = now + 2500; r.streak = 0;
+        breathe(true); setTimeout(() => scare(true, "🥵"), 150); refreshHUD(); toast("🔥 Burned by the dragon! −50 points");
+      }
+    }
+    if (r.pos >= r.T) { r.pos = r.T; r.fin = 1; r.ft = Math.round(el*10)/10; r.points += 300; refreshHUD(); racePush();
+      $("#sheet").innerHTML = `<div class="center"><div class="big">🏁</div><h2 class="title" style="margin:0">You finished!</h2><p class="small muted">+300 points · watch the others race…</p></div>`; }
+  }
+  r.gap = (r.pos - D)/r.T*100*2.5;                          // for the danger glow
+  if (!r.fin && now >= r.nextBreath) { const close = r.pos - D < .08*r.T; if (D > -10) breathe(false); r.nextBreath = now + (close ? 1700 : 3000) + Math.random()*2000; }
+  if (now - r.lastPush >= CONFIG.RACE_POLL_MS) racePush();
+  const st = r.steps[r.i];
+  if (st && st.t==="fire" && !r.answered && r.started) {
+    const left = r.fireEnd - now, b = $("#cbar");
+    if (b) b.style.width = Math.max(0, left/(r.L.fire*10))+"%";
+    if (left <= 0) judge(null);
+  }
+}
+async function racePush(){
+  const r = S.run; if (!r || !r.race) return;
+  r.lastPush = Date.now();
+  try {
+    const t0 = Date.now();
+    const out = await api("raceUpdate", {...S.auth, raceId:r.meta.id, p:Math.round(r.pos*10)/10, pts:r.points, fin:r.fin, ft:r.ft, cor:r.correct, tot:r.results.length, b:r.burns, str:r.strikes});
+    if (!out.ok || S.run !== r) return;
+    r.offset = r.offset*.7 + (out.now - (t0+Date.now())/2)*.3;
+    r.others = out.players.filter(p => p.cls+"|"+p.name !== meKey());
+    if (out.race && out.race.state==="ended" && !r.over) raceOver("ended");
+  } catch(e) {}
+}
+function standingsNow(){
+  const r = S.run, nowS = raceNow(), list = r.others.map(o => {
+    const extra = o.fin ? 0 : Math.min(r.base*6, r.base*Math.max(0, (nowS - (o.t||nowS))/1000));
+    return {...o, p:Math.min(r.T, (o.p||0) + extra)};
+  });
+  list.push({cls:S.auth.cls, name:S.auth.name, p:r.pos, pts:r.points, fin:r.fin, ft:r.ft, me:1, str:r.strikes});
+  return sortStand(list);
+}
+function frameRace(now){
+  const r = S.run, stage = $("#stage"); if (!r || !stage || r.finished) return;
+  const W = stage.clientWidth, H = stage.clientHeight, sc = W/MW, world = $("#world");
+  world.style.width = W+"px"; world.style.height = MH*sc+"px";
+  const dt = Math.min(.05, (now-(r.lf||now))/1000); r.lf = now;
+  const el = (raceNow() - r.meta.startAt)/1000, D = dragonPos(Math.max(0, el), r.meta);
+  r.rS += (raceS(r.pos) - r.rS)*Math.min(1, dt*6);
+  r.dS += (raceS(Math.max(0, D)) - r.dS)*Math.min(1, dt*4);
+  const rp=P(r.rS), dp=P(r.dS), ra=P(r.rS+6), da=P(r.dS+6);
+  placeTok($("#run"), rp, sc, ra.x >= rp.x ? -1 : 1);
+  placeTok($("#drg"), dp, sc, da.x >= dp.x ? -1 : 1);
+  $("#drg").style.opacity = D < -2 ? .35 : 1;
+  const stand = standingsNow(), gl = $("#ghosts");
+  stand.forEach(o => {
+    if (o.me) return;
+    const id = "g_"+btoa(unescape(encodeURIComponent(o.cls+"|"+o.name))).replace(/[^a-z0-9]/gi,"");
+    let g = document.getElementById(id);
+    if (!g) { g = document.createElement("div"); g.id = id; g.className = "tok ghost"; g.innerHTML = `<span class="in">${o.fin?"🏁":"🏃"}</span><span class="nm">${esc(o.name.replace("🤖 ",""))}</span>`; gl.appendChild(g); }
+    o.s = o.s==null ? raceS(o.p) : o.s;
+    const s = raceS(o.p), q = P(s), qa = P(s+6);
+    placeTok(g, q, sc, qa.x >= q.x ? -1 : 1);
+  });
+  const target = rp.y*sc - H*0.27;
+  r.cam = r.cam==null ? target : r.cam + (target - r.cam)*Math.min(1, dt*4);
+  world.style.transform = `translateY(${-r.cam}px)`;
+  if (stage.scrollTop) stage.scrollTop = 0;
+  const myRank = stand.findIndex(o=>o.me)+1;
+  $("#rtime").textContent = el < 0 ? fmtT(r.meta.duration) : fmtT(r.meta.duration - el);
+  $("#rrank").textContent = `#${myRank}/${stand.length}`;
+  $("#rdist").textContent = `${Math.floor(r.pos)} / ${r.T} m`;
+  $("#rdrag").textContent = r.fin ? "🏁" : `🐉 ${Math.max(0, Math.floor(r.pos - D))} m`;
+  $("#rtop").innerHTML = stand.slice(0,3).map((o,k)=>`<span class="${o.me?"me":""}">${["🥇","🥈","🥉"][k]} ${esc(o.me?"You":o.name.replace("🤖 ",""))} ${Math.floor(o.p)}m</span>`).join("") + (myRank>3 ? `<span class="me">#${myRank} You ${Math.floor(r.pos)}m</span>` : "");
+  stage.classList.toggle("close", !r.fin && r.pos - D < .06*r.T && el > 0);
+  r.raf = requestAnimationFrame(frameRace);
+}
+function raceOver(why){
+  const r = S.run; if (!r || r.over) return;
+  r.over = true; r.finished = true;
+  clearInterval(S.tick); cancelAnimationFrame(r.raf); disarmAntiCheat(); exitFS(); hideOverlay();
+  document.body.classList.remove("running");
+  racePushFinal(r);
+  const stand = standingsNow(), me = stand.findIndex(o=>o.me)+1;
+  app.innerHTML = `
+    <div class="hero" style="margin:14px 0 8px">${me===1?"🏆":me<=3?"🎉":"🏁"}</div>
+    <div class="parch center"><div class="qtype">Class race · ${esc(r.L.name)}</div>
+      <h2 class="title" style="margin:6px 0">${why==="out" ? "You're out (3 strikes)" : me===1 ? "You won the race!" : `You finished #${me} of ${stand.length}`}</h2>
+      <p style="margin:4px 0">${Math.floor(r.pos)} m · ${r.points} points · ${r.correct}/${r.results.length} correct · 🔥 burned ${r.burns}×</p>
+      <p class="small" style="margin:6px 0 0">The final results are on your teacher's screen.</p></div>
+    <div class="card" style="margin-top:14px;padding:6px 10px"><table><tr><th>#</th><th>Runner</th><th>Distance</th><th style="text-align:right">Points</th></tr>
+      ${stand.map((o,k)=>`<tr class="${o.me?"me":""}"><td>${k<3?["🥇","🥈","🥉"][k]:k+1}</td><td>${esc(o.me?S.auth.name:o.name)}${o.str>=CONFIG.MAX_STRIKES?" 🚫":""}</td><td>${o.fin?"🏁 "+fmtT(o.ft):Math.floor(o.p)+" m"}</td><td style="text-align:right">${o.pts}</td></tr>`).join("")}
+    </table></div>
+    <button class="btn block" id="map" style="margin-top:16px">Back to the map</button>`;
+  $("#map").onclick = renderMap;
+}
+async function racePushFinal(r){ try { await api("raceUpdate", {...S.auth, raceId:r.meta.id, p:Math.round(r.pos*10)/10, pts:r.points, fin:r.fin, ft:r.ft, cor:r.correct, tot:r.results.length, b:r.burns, str:r.strikes}); } catch(e) {} }
+
+/* ---------- teacher: race host + projector board (open the game with ?host) ---------- */
+const H = {tpin:"", race:null, players:[], poll:null, ending:false};
+async function renderHost(){
+  document.body.classList.add("board-mode");
+  let classes = [];
+  try { const out = await api("roster"); if (out.ok) classes = [...new Set(out.students.map(s=>s.cls))].sort(); } catch(e) {}
+  app.innerHTML = `<div class="logo">🏁 Dragon Run · Class Race</div><div class="sub">Teacher screen — show this on the projector</div>
+    <div class="card" style="max-width:520px;margin:0 auto">
+      ${!CONFIG.API_URL ? `<div class="hintbox" style="margin:0 0 6px">Demo mode: teacher PIN is <b>1234</b>. 12 robot runners will join.</div>` : ""}
+      <label>Teacher PIN</label><input id="tpin" type="password" inputmode="numeric" value="${esc(H.tpin)}">
+      <label>Class</label><select id="hcls"><option value="ALL">All classes</option>${classes.map(c=>`<option>${esc(c)}</option>`).join("")}</select>
+      <label>Land</label><select id="hland">${LEVELS.filter(L=>!L.story).map(L=>`<option value="${L.id}">${L.id}. ${esc(L.name)} — ${esc(L.topic)}</option>`).join("")}</select>
+      <label>Race time</label><select id="hdur"><option value="180">3 minutes</option><option value="240">4 minutes</option><option value="300" selected>5 minutes</option><option value="420">7 minutes</option></select>
+      <div id="herr" class="flash" style="color:#ff8f80"></div>
+      <button class="btn block" id="open">Open the race lobby</button>
+    </div>`;
+  $("#open").onclick = async () => {
+    H.tpin = $("#tpin").value.trim();
+    try {
+      const out = await api("raceCreate", {tpin:H.tpin, cls:$("#hcls").value, land:$("#hland").value, duration:$("#hdur").value});
+      if (!out.ok) throw new Error(out.error);
+      H.race = out.race; H.ending = false; hostLoop();
+    } catch(e) { $("#herr").textContent = e.message; }
+  };
+}
+function hostLoop(){
+  clearInterval(H.poll);
+  const tickHost = async () => {
+    try {
+      const t0 = Date.now(), out = await api("raceState", {cls:H.race.cls}), t1 = Date.now();
+      if (!out.ok || !out.race) return;
+      H.race = out.race; H.players = out.players; H.offset = out.now - (t0+t1)/2;
+      if (H.race.state==="lobby") hostLobby();
+      else if (H.race.state==="running") {
+        hostBoard();
+        if ((Date.now()+H.offset - H.race.startAt)/1000 > H.race.duration + 4 && !H.ending) {
+          H.ending = true; const e = await api("raceEnd", {tpin:H.tpin, raceId:H.race.id}); if (e.ok) { H.race = e.race; H.players = e.players; hostPodium(); clearInterval(H.poll); }
+        }
+      } else { hostPodium(); clearInterval(H.poll); }
+    } catch(e) {}
+  };
+  tickHost(); H.poll = setInterval(tickHost, 2000);
+}
+function hostLobby(){
+  const L = LEVELS.find(x=>x.id===H.race.land);
+  if (!$("#hlobby")) {
+    app.innerHTML = `<div id="hlobby"><div class="logo">🏁 Race lobby</div>
+      <div class="sub">${L.icon} ${esc(L.name)} · ${esc(L.topic)} · ${fmtT(H.race.duration)} min · ${H.race.cls==="ALL"?"All classes":"Class "+esc(H.race.cls)}</div>
+      <div class="card center" style="max-width:900px;margin:0 auto"><p style="font-size:20px;margin:0 0 10px">Students: open the game, log in and tap <b>🏁 Join the class race</b></p>
+        <div class="big" id="hcount">0</div><p class="muted" style="margin-top:0">runners ready</p><div class="chips" id="hchips"></div>
+        <div class="row" style="margin-top:18px;max-width:520px;margin-left:auto;margin-right:auto"><button class="btn ghost" id="hcancel">Cancel</button><button class="btn green" id="hstart">Start the race! 🚀</button></div>
+        <div id="herr" class="flash" style="color:#ff8f80"></div></div></div>`;
+    $("#hcancel").onclick = async () => { clearInterval(H.poll); await api("raceEnd", {tpin:H.tpin, raceId:H.race.id}); renderHost(); };
+    $("#hstart").onclick = async () => { const o = await api("raceStart", {tpin:H.tpin, raceId:H.race.id}); if (!o.ok) $("#herr").textContent = o.error; else { H.race = o.race; hostBoard(); } };
+  }
+  $("#hcount").textContent = H.players.length;
+  $("#hchips").innerHTML = H.players.map(p=>`<span class="chip">${esc(p.name)}</span>`).join("");
+}
+function hostBoard(){
+  const m = H.race, L = LEVELS.find(x=>x.id===m.land), el = (Date.now()+(H.offset||0) - m.startAt)/1000;
+  if (!$("#lanes")) {
+    app.innerHTML = `<div class="hboard"><div class="hhead"><div class="title" style="font-size:28px;color:var(--gold)">${L.icon} ${esc(L.name)} — Class Race</div>
+      <div class="htime" id="htime"></div></div><div class="lanes" id="lanes"><div class="dline" id="dline"><span>🐉</span></div><div class="fline">🏁</div></div></div>`;
+  }
+  $("#htime").textContent = el < 0 ? `Starting in ${Math.ceil(-el)}…` : `⏱ ${fmtT(m.duration - el)}`;
+  const st = sortStand(H.players), lanes = $("#lanes"), rowH = Math.max(28, Math.min(54, (innerHeight-150)/Math.max(1, st.length)));
+  lanes.style.height = (st.length*rowH + 10)+"px";
+  const D = dragonPos(Math.max(0, el+2), m), fx = p => `calc(var(--lx) + (100% - var(--lx) - 70px) * ${Math.max(0, Math.min(1, p/m.track)).toFixed(4)})`;
+  $("#dline").style.left = fx(Math.max(0, D)); $("#dline").style.opacity = D < 0 ? .3 : 1;
+  st.forEach((o,k) => {
+    const id = "h_"+btoa(unescape(encodeURIComponent(o.cls+"|"+o.name))).replace(/[^a-z0-9]/gi,"");
+    let row = document.getElementById(id);
+    if (!row) { row = document.createElement("div"); row.id = id; row.className = "lane"; row.innerHTML = `<span class="rk"></span><span class="nm"></span><span class="rn">🏃</span><span class="ds"></span>`; lanes.appendChild(row); }
+    row.style.top = (k*rowH)+"px"; row.style.height = (rowH-4)+"px";
+    row.querySelector(".rk").textContent = k<3 ? ["🥇","🥈","🥉"][k] : k+1;
+    row.querySelector(".nm").textContent = o.name + (o.str>=CONFIG.MAX_STRIKES ? " 🚫" : "");
+    const proj = o.fin ? o.p : Math.min(m.track, o.p + raceBase(m)*2);   // where they will be at the next update
+    row.querySelector(".rn").style.left = fx(proj);
+    row.querySelector(".rn").textContent = o.fin ? "🏁" : "🏃";
+    row.querySelector(".ds").textContent = o.fin ? "🏁 "+fmtT(o.ft) : Math.floor(o.p)+" m";
+  });
+}
+function hostPodium(){
+  const st = sortStand(H.players), L = LEVELS.find(x=>x.id===H.race.land);
+  app.innerHTML = `<div class="logo">🏆 Race results</div><div class="sub">${L.icon} ${esc(L.name)}${CONFIG.API_URL?" · saved to the Races sheet":""}</div>
+    <div class="podium">${[1,0,2].map(k => st[k] ? `<div class="pod p${k+1}"><div class="pm">${["🥇","🥈","🥉"][k]}</div><b>${esc(st[k].name)}</b><div>${st[k].fin?"🏁 "+fmtT(st[k].ft):Math.floor(st[k].p)+" m"}</div><div class="bar${k+1}">${k+1}</div></div>` : "").join("")}</div>
+    <div class="card" style="max-width:900px;margin:16px auto;padding:6px 12px"><table><tr><th>#</th><th>Runner</th><th>Class</th><th>Distance</th><th>Correct</th><th>Burned</th><th style="text-align:right">Points</th></tr>
+      ${st.map((o,k)=>`<tr><td>${k+1}</td><td>${esc(o.name)}${o.str>=CONFIG.MAX_STRIKES?" 🚫":""}</td><td>${esc(o.cls)}</td><td>${o.fin?"🏁 "+fmtT(o.ft):Math.floor(o.p)+" m"}</td><td>${o.cor}/${o.tot}</td><td>${o.b}×</td><td style="text-align:right">${o.pts}</td></tr>`).join("")}</table></div>
+    <div class="center"><button class="btn" id="again">New race</button></div>`;
+  $("#again").onclick = () => { H.race = null; renderHost(); };
+}
+
+/* ---------- endings ---------- */
+function resultOf(r, status){
+  const total = r.steps.length;
+  return { caseId:r.caseId, attempt:r.attempt, status, points:Math.max(0, Math.round(r.points)), correct:r.correct, total,
+           speed:Math.round(r.bonusSum/(50*PATTERN.filter(x=>x==="Q").length)*100), strikes:r.strikes,
+           accused:"", log:JSON.stringify(r.log), qids:r.qids.join(",") };
+}
+function caught(){
+  const r=S.run; if (!r||r.finished||r.ending) return;
+  r.ending = true; r.gap = 0; r.dS = r.rS;
+  breathe(true); setTimeout(() => scare(true, "😵"), 200);
+  const sh=$("#sheet"); if (sh) sh.innerHTML = `<div class="center"><div class="big">🐉🔥</div><h2 class="title" style="margin:0">The dragon caught you!</h2></div>`;
+  setTimeout(() => finishRun("caught"), 1600);
+}
+function treasure(){
+  const r=S.run; if (!r||r.finished||r.ending) return;
+  r.ending = true; r.rT = r.Ls*0.985;
+  const bonus = 200 + Math.round(r.gap*3) + (r.L.final ? 500 : 0);
+  r.points += bonus; r.treasureBonus = bonus; refreshHUD();
+  setTimeout(() => scare(false, "🤩"), 700);
+  const sh=$("#sheet"); if (sh) sh.innerHTML = `<div class="center"><div class="big">${r.L.final?"👑":"💰"}</div><h2 class="title" style="margin:0">You reached the treasure!</h2><p class="small muted">+${bonus} treasure bonus</p></div>`;
+  setTimeout(() => finishRun("completed"), 1800);
+}
+async function finishRun(status){
+  const r=S.run; if (!r||r.finished) return;
+  r.finished = true;
+  clearInterval(S.tick); cancelAnimationFrame(r.raf); disarmAntiCheat(); exitFS(); hideOverlay();
+  document.body.classList.remove("running");
+  const res = resultOf(r, status);
+  app.innerHTML = `<div class="spinner"></div><p class="center muted">Saving your run…</p>`;
+  await submitResult(res, r);
+}
+async function submitResult(res, r){
+  try {
+    const out = await api("submit", {...S.auth, ...res});
+    if (!out.ok) throw new Error(out.error||"Save failed");
+    S.progress = out.progress; store.set("dr_pending", null);
+    renderResult(res, r, true);
+  } catch(e) {
+    store.set("dr_pending", {user:S.auth.cls+"|"+S.auth.name, res});
+    renderResult(res, r, false, e.message);
+  }
+}
+function renderResult(res, r, saved, err){
+  const L = r.L, acc = res.total ? Math.round(res.correct/res.total*100) : 0;
+  const won = res.status==="completed";
+  const head = won ? (L.final ? "👑🐉" : "💰🏃") : res.status==="caught" ? "🐉🔥" : "🚫";
+  const msg = won ? `You escaped and found the treasure: <b>${L.loot[0]} ${esc(L.loot[1])}</b>! Treasure bonus +${r.treasureBonus}.`
+    : res.status==="caught" ? "The dragon caught you! Obstacles you didn't reach count as wrong."
+    : "Your run ended automatically after 3 strikes. Your teacher can see when you left the game.";
+  app.innerHTML = `
+    <div class="hero" style="margin:14px 0 8px">${head}</div>
+    <div class="parch center"><div class="qtype">Land ${L.id} · ${esc(L.name)}</div>
+      <div class="st" style="font-size:40px;color:#c08a14">${starStr(starsFor(acc))}</div>
+      <h2 class="title">${res.points} points</h2>
+      <p style="margin:6px 0">Accuracy <b>${acc}%</b> (${res.correct}/${res.total}) · Strikes <b>${res.strikes}</b></p>
+      <p style="margin:6px 0 0">${msg}</p></div>
+    ${won && L.final ? `<div class="parch" style="margin-top:14px"><h2 class="title">The End… or a new beginning</h2><p style="line-height:1.6;margin:0">${esc(ENDING)}</p></div>` : ""}
+    ${r.practice ? `<div class="hintbox" style="margin-top:14px">🔁 Practice run — it does not change your grade. Play again for new questions!</div>` : ""}
+    ${!won && res.status==="caught" && !r.practice ? `<div class="card small" style="margin-top:14px">💡 Tip: you still have ${Math.max(0,CONFIG.MAX_ATTEMPTS-((S.progress[L.id]||{}).attempts||0))} tries left (then unlimited practice). You will get new questions next time. The next land is open, but this land's treasure is only yours when you reach the end.</div>`:""}
+    ${saved ? "" : `<div class="feedback no">⚠️ Not saved yet (${esc(err||"network error")}). Check your connection and tap Retry — it will also retry the next time you log in.
+        <button class="btn block" id="retry" style="margin-top:10px">Retry saving</button></div>`}
+    <div class="row" style="margin-top:16px"><button class="btn" id="map">Back to the map</button><button class="btn ghost" id="lbBtn">🏆 Leaderboard</button></div>`;
+  $("#map").onclick = renderMap; $("#lbBtn").onclick = renderLeaderboard;
+  if (!saved) $("#retry").onclick = () => { app.innerHTML=`<div class="spinner"></div>`; submitResult(res, r); };
+}
+
+/* =====================================================================
+   ANTI-CHEAT
+   ===================================================================== */
+const AC = { armed:false, last:0, area:0 };
+function onVis(){ if (document.visibilityState==="hidden") strike("You left the game (switched tab or app)"); }
+function onBlur(){ strike("The game window lost focus (another window or app)"); }
+function onResize(){ const a=innerWidth*innerHeight; if (a>AC.area) { AC.area=a; return; } if (a<AC.area*0.6) { AC.area=a; strike("The screen became much smaller (split-screen or small window)"); } }
+function blockEvt(e){ e.preventDefault(); }
+function onPageHide(){
+  const r=S.run; if (!r||r.finished) return;
+  if (r.race) { r.finished = true; r.log.push({t:"end", reason:"Closed the game during the race"});
+    const d = {action:"raceUpdate", ...S.auth, raceId:r.meta.id, p:Math.round(r.pos*10)/10, pts:r.points, fin:r.fin, ft:r.ft, cor:r.correct, tot:r.results.length, b:r.burns, str:r.strikes};
+    if (!CONFIG.API_URL) MockRace.exec("raceUpdate", d); else try { navigator.sendBeacon(CONFIG.API_URL, new Blob([JSON.stringify(d)], {type:"text/plain;charset=utf-8"})); } catch(e) {}
+    return; }
+  r.finished = true; r.abandoned = true; cancelAnimationFrame(r.raf);
+  r.log.push({t:"end", reason:"Closed or left the game during the run"});
+  const res = {action:"submit", ...S.auth, ...resultOf(r, "abandoned")};
+  if (!CONFIG.API_URL) { Mock.exec("submit", res); return; }
+  try { navigator.sendBeacon(CONFIG.API_URL, new Blob([JSON.stringify(res)], {type:"text/plain;charset=utf-8"})); } catch(e) {}
+}
+function armAntiCheat(){
+  AC.armed=true; AC.last=Date.now(); AC.area=innerWidth*innerHeight;
+  document.addEventListener("visibilitychange", onVis); window.addEventListener("blur", onBlur);
+  window.addEventListener("resize", onResize); window.addEventListener("pagehide", onPageHide);
+  ["copy","cut","paste","contextmenu"].forEach(ev => document.addEventListener(ev, blockEvt));
+}
+function disarmAntiCheat(){
+  AC.armed=false;
+  document.removeEventListener("visibilitychange", onVis); window.removeEventListener("blur", onBlur);
+  window.removeEventListener("resize", onResize); window.removeEventListener("pagehide", onPageHide);
+  ["copy","cut","paste","contextmenu"].forEach(ev => document.removeEventListener(ev, blockEvt));
+}
+function strike(reason){
+  const r=S.run; if (!AC.armed||!r||r.finished) return;
+  const now=Date.now(); if (now-AC.last<2500) return;   // one event = one strike
+  AC.last=now; r.strikes++;
+  r.log.push({t:Math.round((now-r.startedAt)/1000)+"s", reason});
+  if (r.strikes >= CONFIG.MAX_STRIKES) { if (r.race) raceOver("out"); else finishRun("auto-submitted"); return; }
+  let pen = "";
+  if (r.strikes===2) { r.points=Math.max(0, r.points-CONFIG.STRIKE_PENALTY); pen=`<b>−${CONFIG.STRIKE_PENALTY} points.</b> `; }
+  refreshHUD();
+  showOverlay(`<div class="big">🚨</div><h2 class="title">Strike ${r.strikes} of ${CONFIG.MAX_STRIKES}</h2>
+    <p>${esc(reason)}.</p><p>${pen}The dragon is still running!</p>
+    <p class="small muted">${r.strikes===1 ? `Next strike: −${CONFIG.STRIKE_PENALTY} points.` : "Next strike: your run ends automatically."}</p>
+    <button class="btn block" id="resume">Back to the run</button>`);
+  $("#resume").onclick = () => { hideOverlay(); requestFS(); };
+}
+window.addEventListener("pageshow", e => {
+  if (e.persisted && S.run && S.run.abandoned) {
+    hideOverlay(); document.body.classList.remove("running");
+    app.innerHTML = `<div class="parch center"><h2 class="title">Run ended</h2><p>You left the game during the run, so this try was saved with the points you had.</p></div>
+      <button class="btn block" id="relog" style="margin-top:14px">Log in again</button>`;
+    $("#relog").onclick = () => { S.run=null; renderLogin(); };
+  }
+});
+
+/* =====================================================================
+   TREASURE BAG & LEADERBOARD
+   ===================================================================== */
+function renderBag(){
+  stopLB();
+  app.innerHTML = `
+    <div class="topbar"><button class="btn ghost sm" id="back">← Map</button><span class="pill gold">${Object.values(S.progress).filter(c=>c.won).length}/${LEVELS.length}</span></div>
+    <h2 class="title">🎒 Treasure Bag</h2><p class="small muted">Reach the end of a land without being caught to collect its treasure.</p>
+    <div class="bag">${LEVELS.map(L => { const has=(S.progress[L.id]||{}).won;
+      return `<div class="it ${has?"":"no"}"><div class="e">${L.loot[0]}</div><b>${esc(L.loot[1])}</b><div class="small">${esc(L.name)}</div></div>`; }).join("")}</div>
+    ${foot()}`;
+  $("#back").onclick = renderMap;
+}
+function lbTable(rows){
+  if (!rows.length) return `<p class="muted center">No scores yet. Be the first runner!</p>`;
+  return `<div class="card" style="padding:6px 10px"><table>
+    <tr><th>#</th><th>Runner</th><th>Class</th><th>Lands</th><th style="text-align:right">Points</th></tr>
+    ${rows.map((r,i)=>{ const me = S.auth && r.name===S.auth.name && r.cls===S.auth.cls;
+      return `<tr class="${me?"me":""}"><td>${i<3?["🥇","🥈","🥉"][i]:i+1}</td><td>${esc(r.name)}</td><td>${esc(r.cls)}</td><td>${r.cases}/${LEVELS.length}</td><td style="text-align:right;font-weight:700">${r.points}</td></tr>`; }).join("")}
+  </table></div><p class="small muted center">Updated ${new Date().toLocaleTimeString()} · refreshes automatically</p>`;
+}
+async function loadLB(n){
+  if (!$("#lb")) return;
+  try { const out = await api("leaderboard", {cls:S.lbFilter}); if (!out.ok) throw new Error(out.error); if ($("#lb")) $("#lb").innerHTML = lbTable(out.rows.slice(0,n)); }
+  catch(e) { if ($("#lb")) $("#lb").innerHTML = `<p class="muted center">Cannot load the leaderboard right now. Retrying…</p>`; }
+}
+function renderLeaderboard(){
+  stopLB();
+  app.innerHTML = `
+    <div class="topbar"><button class="btn ghost sm" id="back">← Map</button><span class="pill gold">● Live</span></div>
+    <h2 class="title">🏆 Leaderboard</h2>
+    <div class="row" style="margin-bottom:12px"><button class="btn ${S.lbFilter?"ghost":""}" id="fAll">All classes</button><button class="btn ${S.lbFilter?"":"ghost"}" id="fMine">My class (${esc(S.auth.cls)})</button></div>
+    <div id="lb"><div class="spinner"></div></div>`;
+  $("#back").onclick = renderMap;
+  $("#fAll").onclick = () => { S.lbFilter=""; renderLeaderboard(); };
+  $("#fMine").onclick = () => { S.lbFilter=S.auth.cls; renderLeaderboard(); };
+  loadLB(30); S.lbTimer = setInterval(()=>loadLB(30), CONFIG.LEADERBOARD_REFRESH_MS);
+}
+async function renderBoard(){
+  document.body.classList.add("board-mode");
+  S.lbFilter = new URLSearchParams(location.search).get("class") || "";
+  app.innerHTML = `<div class="logo">🐉 Dragon Run · Live Leaderboard</div>
+    <div class="row" style="justify-content:center;margin:10px 0 16px"><select id="bcls" style="max-width:280px"><option value="">All classes</option></select></div>
+    <div id="lb"><div class="spinner"></div></div>`;
+  try { const out = await api("roster"); if (out.ok) { const cl=[...new Set(out.students.map(s=>s.cls))].sort(); $("#bcls").innerHTML += cl.map(c=>`<option ${c===S.lbFilter?"selected":""}>${esc(c)}</option>`).join(""); } } catch(e) {}
+  $("#bcls").onchange = e => { S.lbFilter=e.target.value; loadLB(15); };
+  loadLB(15); S.lbTimer = setInterval(()=>loadLB(15), 10000);
+}
+
+/* =====================================================================
+   START
+   ===================================================================== */
+const QS = new URLSearchParams(location.search);
+if (QS.has("host")) renderHost(); else if (QS.has("board")) renderBoard(); else renderLogin();
+</script>
+</body>
+</html>
