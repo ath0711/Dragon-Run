@@ -725,9 +725,11 @@ function requestFS(){ const el=document.documentElement; try { const f=el.reques
 function exitFS(){ try { if (document.fullscreenElement) document.exitFullscreen().catch(()=>{}); } catch(e){} }
 function tokenize(s){ return (s.match(/\[[^\]]+\]\S*|\S+/g)||[]).map(w => ({w:w.replace(/[\[\]]/g,""), bad:w.startsWith("[")})); }
 
+const STALE_MS = 15*60*1000;      // a run still "started" after 15 minutes counts as finished, so the next land unlocks
 function computeProgress(rows){
-  const p = {};
+  const p = {}, now = Date.now();
   rows.forEach(r => {
+    if (r.status==="started" && r.ts && now - r.ts > STALE_MS) r = {...r, status:"abandoned"};
     const c = p[r.caseId] || (p[r.caseId] = {attempts:0, done:false, won:false, bestPoints:0, bestAcc:0, practice:0, practiceBest:0});
     if (Number(r.attempt) === 0) {                    // practice run: no try used, no grade
       if (r.status !== "started") { c.practice++; c.practiceBest = Math.max(c.practiceBest, Number(r.points)||0); if (r.status==="completed") c.won = true; }
@@ -774,7 +776,7 @@ const Mock = {
       const n = d.practice ? 0 : used+1;
       if (d.practice && used < CONFIG.MAX_ATTEMPTS) return {ok:false, error:"Use your graded tries first."};
       if (!d.practice && used >= CONFIG.MAX_ATTEMPTS) return {ok:false, error:"No tries left for this land."};
-      db.attempts.push({cls:d.cls, name:d.name, caseId, attempt:n, status:"started", points:0, correct:0, total:0, speed:0, strikes:0});
+      db.attempts.push({cls:d.cls, name:d.name, caseId, attempt:n, status:"started", points:0, correct:0, total:0, speed:0, strikes:0, ts:Date.now()});
       this.save(db); return {ok:true, attempt:n};
     }
     if (action==="submit") {
@@ -782,6 +784,12 @@ const Mock = {
       if (!row) return {ok:false, error:"Attempt not found or already submitted."};
       Object.assign(row, {status:d.status, points:Number(d.points)||0, correct:Number(d.correct)||0, total:Number(d.total)||0, speed:Number(d.speed)||0, strikes:Number(d.strikes)||0, qids:d.qids||""});
       this.save(db); return {ok:true, progress:computeProgress(mine())};
+    }
+    if (action==="checkpoint") {
+      const row = db.attempts.filter(r => r.cls===d.cls && r.name===d.name && r.caseId===caseId && r.attempt===Number(d.attempt) && r.status==="started").pop();
+      if (!row) return {ok:false, error:"Attempt not found."};
+      Object.assign(row, {points:Number(d.points)||0, correct:Number(d.correct)||0, total:Number(d.total)||0});
+      this.save(db); return {ok:true};
     }
     return {ok:false, error:"Unknown action"};
   },
@@ -1579,15 +1587,19 @@ async function finishRun(status){
   await submitResult(res, r);
 }
 async function submitResult(res, r){
-  try {
-    const out = await api("submit", {...S.auth, ...res});
-    if (!out.ok) throw new Error(out.error||"Save failed");
-    S.progress = out.progress; store.set("dr_pending", null);
-    renderResult(res, r, true);
-  } catch(e) {
-    store.set("dr_pending", {user:S.auth.cls+"|"+S.auth.name, res});
-    renderResult(res, r, false, e.message);
+  store.set("dr_pending", {user:S.auth.cls+"|"+S.auth.name, res});          // kept until the save is confirmed
+  const waits = [0, 2000, 5000, 10000];                                   // try 4 times before giving up
+  let err = "";
+  for (let k=0; k<waits.length; k++) {
+    if (waits[k]) { const m = app.querySelector(".muted"); if (m) m.textContent = `The server is busy — trying again (${k+1}/${waits.length})…`; await new Promise(z => setTimeout(z, waits[k])); }
+    try {
+      const out = await api("submit", {...S.auth, ...res});
+      if (out.ok) { S.progress = out.progress; store.set("dr_pending", null); renderResult(res, r, true); return; }
+      err = out.error || "Save failed";
+      if (/not found|already/i.test(err)) { store.set("dr_pending", null); break; }   // nothing left to save
+    } catch(e) { err = e.message; }
   }
+  renderResult(res, r, false, err);
 }
 function renderResult(res, r, saved, err){
   const L = r.L, acc = res.total ? Math.round(res.correct/res.total*100) : 0;
@@ -1617,7 +1629,17 @@ function renderResult(res, r, saved, err){
    ANTI-CHEAT
    ===================================================================== */
 const AC = { armed:false, last:0, area:0 };
-function onVis(){ if (document.visibilityState==="hidden") strike("You left the game (switched tab or app)"); }
+function onVis(){
+  if (document.visibilityState!=="hidden") return;
+  checkpoint();                                   // phones may close the page without warning — save the score so far
+  strike("You left the game (switched tab or app)");
+}
+function checkpoint(){
+  const r=S.run; if (!r || r.finished || r.race) return;
+  const d = {action:"checkpoint", ...S.auth, ...resultOf(r, "started")};
+  if (!CONFIG.API_URL) { Mock.exec("checkpoint", d); return; }
+  try { navigator.sendBeacon(CONFIG.API_URL, new Blob([JSON.stringify(d)], {type:"text/plain;charset=utf-8"})); } catch(e) {}
+}
 function onBlur(){ strike("The game window lost focus (another window or app)"); }
 function onResize(){ const a=innerWidth*innerHeight; if (a>AC.area) { AC.area=a; return; } if (a<AC.area*0.6) { AC.area=a; strike("The screen became much smaller (split-screen or small window)"); } }
 function blockEvt(e){ e.preventDefault(); }
